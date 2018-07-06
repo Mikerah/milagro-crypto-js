@@ -310,6 +310,7 @@ var FP = function(ctx) {
 
         /* this=1/this mod Modulus */
         inverse: function() {
+            /*
             var p = new ctx.BIG(0),
                 r = this.redc();
 
@@ -317,7 +318,15 @@ var FP = function(ctx) {
             r.invmodp(p);
             this.f.copy(r);
 
-            return this.nres();
+            return this.nres(); */
+
+            var m2=new ctx.BIG(0);
+
+            m2.rcopy(ctx.ROM_FIELD.Modulus);
+            m2.dec(2); m2.norm();
+            this.copy(this.pow(m2));
+            return this;
+
         },
 
         /* return TRUE if this==a */
@@ -333,6 +342,41 @@ var FP = function(ctx) {
         },
 
         /* return this^e mod Modulus */
+        pow: function(e) {
+            var i,w=[],
+                tb=[],
+                t=new ctx.BIG(e),
+                nb, lsbs, r;
+
+            t.norm();
+            nb= 1 + Math.floor((t.nbits() + 3) / 4);
+
+            for (i=0;i<nb;i++) {
+                lsbs=t.lastbits(4);
+                t.dec(lsbs);
+                t.norm();
+                w[i]=lsbs;
+                t.fshr(4);
+            }
+            tb[0]=new FP(1);
+            tb[1]=new FP(this);
+            for (i=2;i<16;i++) {
+                tb[i]=new FP(tb[i-1]);
+                tb[i].mul(this);
+            }
+            r=new FP(tb[w[nb-1]]);
+            for (i=nb-2;i>=0;i--) {
+                r.sqr();
+                r.sqr();
+                r.sqr();
+                r.sqr();
+                r.mul(tb[w[i]]);
+            }
+            r.reduce();
+            return r;
+        },
+
+        /* return this^e mod Modulus
         pow: function(e) {
             var bt,
                 r = new FP(1),
@@ -360,7 +404,7 @@ var FP = function(ctx) {
             r.reduce();
 
             return r;
-        },
+        }, */
 
         /* return jacobi symbol (this/Modulus) */
         jacobi: function() {
@@ -512,5 +556,7 @@ var FP = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.FP = FP;
+    module.exports = {
+        FP: FP
+    };
 }

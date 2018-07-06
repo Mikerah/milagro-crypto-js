@@ -105,6 +105,14 @@ describe('TEST ECP ARITHMETIC', function() {
 		            Paux1.affine();
 		            expect(Paux1.toString()).to.equal(Paux2.toString());
 
+                    // Test sum with infinity
+                    Paux1.copy(P1);
+                    Paux2.inf();
+                    Paux1.add(Paux2);
+                    expect(Paux1.toString()).to.equal(P1.toString());
+                    Paux2.add(Paux1);
+                    expect(Paux2.toString()).to.equal(P1.toString());
+
 	                // test negative of a point
 	                var Pneg = readPoint(vectors[k].ECPneg,ctx);
 	                Paux1.copy(P1);

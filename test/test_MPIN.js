@@ -72,7 +72,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             var EFS = ctx.MPIN.EFS;
             var EAS = 16;
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
 
             var G1S = 2 * EFS + 1; /* Group 1 Size */
             var G2S = 4 * EFS; /* Group 2 Size */
@@ -163,7 +163,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             var EFS = ctx.MPIN.EFS;
             var EAS = 16;
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
 
             var G1S = 2 * EFS + 1; /* Group 1 Size */
             var G2S = 4 * EFS; /* Group 2 Size */
@@ -250,7 +250,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             var EFS = ctx.MPIN.EFS;
             var EAS = 16;
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
 
             var G1S = 2 * EFS + 1; /* Group 1 Size */
             var G2S = 4 * EFS; /* Group 2 Size */
@@ -354,7 +354,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             var EFS = ctx.MPIN.EFS;
             var EAS = 16;
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
 
             var G1S = 2 * EFS + 1; /* Group 1 Size */
             var G2S = 4 * EFS; /* Group 2 Size */
@@ -443,7 +443,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             var EFS = ctx.MPIN.EFS;
             var EAS = 16;
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
 
             var G1S = 2 * EFS + 1; /* Group 1 Size */
             var G2S = 4 * EFS; /* Group 2 Size */
@@ -536,7 +536,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             var EFS = ctx.MPIN.EFS;
             var EAS = 16;
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
 
             var G1S = 2 * EFS + 1; /* Group 1 Size */
             var G2S = 4 * EFS; /* Group 2 Size */
@@ -663,7 +663,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             // Load test vectors
             var vectors = require('../testVectors/mpin/MPIN_' + pf_curves[j] + '.json');
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
             var CS = [];
             var TP = [];
             var TP1bytes = [];
@@ -695,7 +695,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             // Load test vectors
             var vectors = require('../testVectors/mpin/MPIN_' + pf_curves[j] + '.json');
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
             var xID = [];
             var xCID = [];
             var SEC = [];
@@ -719,7 +719,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             // Load test vectors
             var vectors = require('../testVectors/mpin/MPIN_ONE_PASS_' + pf_curves[j] + '.json');
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
             var xID = [];
             var SEC = [];
             var Y = [];

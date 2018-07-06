@@ -28,6 +28,7 @@ var HASH256 = function() {
     };
 
     HASH256.prototype = {
+
         transform: function() { /* basic transformation step */
             var a, b, c, d, e, f, g, hh, t1, t2, j;
 
@@ -198,5 +199,7 @@ var HASH256 = function() {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.HASH256 = HASH256;
+    module.exports = {
+        HASH256: HASH256
+    };
 }

@@ -132,23 +132,24 @@ var PAIR = function(ctx) {
                 Qx, Qy, A, r, nb, bt,
                 i;
 
-            fa = new ctx.BIG(0);
-            fa.rcopy(ctx.ROM_FIELD.Fra);
-            fb = new ctx.BIG(0);
-            fb.rcopy(ctx.ROM_FIELD.Frb);
-            f = new ctx.FP2(fa, fb); //f.bset(fa,fb);
-
-            if (ctx.ECP.SEXTIC_TWIST == ctx.ECP.M_TYPE) {
-                f.inverse();
-                f.norm();
-            }
-
             x = new ctx.BIG(0);
             x.rcopy(ctx.ROM_CURVE.CURVE_Bnx);
             n = new ctx.BIG(x); //n.copy(x);
             K = new ctx.ECP2();
 
             if (ctx.ECP.CURVE_PAIRING_TYPE == ctx.ECP.BN) {
+
+                fa = new ctx.BIG(0);
+                fa.rcopy(ctx.ROM_FIELD.Fra);
+                fb = new ctx.BIG(0);
+                fb.rcopy(ctx.ROM_FIELD.Frb);
+                f = new ctx.FP2(fa, fb); //f.bset(fa,fb);
+
+                if (ctx.ECP.SEXTIC_TWIST == ctx.ECP.M_TYPE) {
+                    f.inverse();
+                    f.norm();
+                }
+
                 n.pmul(6);
                 if (ctx.ECP.SIGN_OF_X == ctx.ECP.POSITIVEX) {
                     n.inc(2);
@@ -195,10 +196,14 @@ var PAIR = function(ctx) {
                 }
             }
 
+            if (ctx.ECP.SIGN_OF_X == ctx.ECP.NEGATIVEX) {
+                r.conj();
+            }
+
             /* R-ate fixup */
             if (ctx.ECP.CURVE_PAIRING_TYPE == ctx.ECP.BN) {
                 if (ctx.ECP.SIGN_OF_X == ctx.ECP.NEGATIVEX) {
-                    r.conj();
+                    //r.conj();
                     A.neg();
                 }
 
@@ -222,16 +227,6 @@ var PAIR = function(ctx) {
                 Qx, Qy, Sx, Sy, A, B, r, nb, bt,
                 i;
 
-            fa = new ctx.BIG(0);
-            fa.rcopy(ctx.ROM_FIELD.Fra);
-            fb = new ctx.BIG(0);
-            fb.rcopy(ctx.ROM_FIELD.Frb);
-            f = new ctx.FP2(fa, fb); //f.bset(fa,fb);
-
-            if (ctx.ECP.SEXTIC_TWIST == ctx.ECP.M_TYPE) {
-                f.inverse();
-                f.norm();
-            }
 
             x = new ctx.BIG(0);
             x.rcopy(ctx.ROM_CURVE.CURVE_Bnx);
@@ -240,6 +235,17 @@ var PAIR = function(ctx) {
             K = new ctx.ECP2();
 
             if (ctx.ECP.CURVE_PAIRING_TYPE == ctx.ECP.BN) {
+                fa = new ctx.BIG(0);
+                fa.rcopy(ctx.ROM_FIELD.Fra);
+                fb = new ctx.BIG(0);
+                fb.rcopy(ctx.ROM_FIELD.Frb);
+                f = new ctx.FP2(fa, fb); //f.bset(fa,fb);
+
+                if (ctx.ECP.SEXTIC_TWIST == ctx.ECP.M_TYPE) {
+                    f.inverse();
+                    f.norm();
+                }
+
                 n.pmul(6);
                 if (ctx.ECP.SIGN_OF_X == ctx.ECP.POSITIVEX) {
                     n.inc(2);
@@ -296,10 +302,15 @@ var PAIR = function(ctx) {
                 }
             }
 
+            if (ctx.ECP.SIGN_OF_X == ctx.ECP.NEGATIVEX) {
+                r.conj();
+            }
+
+
             /* R-ate fixup required for BN curves */
             if (ctx.ECP.CURVE_PAIRING_TYPE == ctx.ECP.BN) {
                 if (ctx.ECP.SIGN_OF_X == ctx.ECP.NEGATIVEX) {
-                    r.conj();
+                    // r.conj();
                     A.neg();
                     B.neg();
                 }
@@ -603,7 +614,8 @@ var PAIR = function(ctx) {
                 u[1].copy(t);
                 Q.neg();
             }
-
+            u[0].norm();
+            u[1].norm();
             R = R.mul2(u[0], Q, u[1]);
         } else {
             R = P.mul(e);
@@ -653,6 +665,7 @@ var PAIR = function(ctx) {
                     u[i].copy(t);
                     Q[i].neg();
                 }
+                u[i].norm();
             }
 
             R = ctx.ECP2.mul4(Q, u);
@@ -695,6 +708,7 @@ var PAIR = function(ctx) {
                     u[i].copy(t);
                     g[i].conj();
                 }
+                u[i].norm();
             }
 
             r = ctx.FP12.pow4(g, u);
@@ -739,5 +753,7 @@ var PAIR = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.PAIR = PAIR;
+    module.exports = {
+        PAIR: PAIR
+    };
 }

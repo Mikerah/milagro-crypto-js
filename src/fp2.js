@@ -348,11 +348,13 @@ var FP2 = function(ctx) {
 
         div_ip2: function() {
             var t = new FP2(0);
+            this.norm();
             t.a.copy(this.a);
             t.a.add(this.b);
             t.b.copy(this.b);
             t.b.sub(this.a);
             this.copy(t);
+            this.norm();
         },
 
         /* w/=(1+sqrt(-1)) */
@@ -403,5 +405,7 @@ var FP2 = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.FP2 = FP2;
+    module.exports = {
+        FP2: FP2
+    };
 }

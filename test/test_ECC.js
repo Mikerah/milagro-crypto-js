@@ -44,7 +44,7 @@ for (var i = all_curves.length - 1; i >= 0; i--) {
         var EGS = ctx.ECDH.EGS;
         var EFS = ctx.ECDH.EFS;
         var EAS = 16;
-        var sha = ctx.ECDH.HASH_TYPE;
+        var sha = ctx.ECP.HASH_TYPE;
         var S1 = [];
         var W0 = [];
         var W1 = [];
@@ -83,7 +83,6 @@ for (var i = all_curves.length - 1; i >= 0; i--) {
 
             // Generate Key pair S/W 
             ctx.ECDH.KEY_PAIR_GENERATE(null, S0, W0);
-
 
             res = ctx.ECDH.PUBLIC_KEY_VALIDATE(W0);
             expect(res).to.be.equal(0);

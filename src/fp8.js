@@ -17,25 +17,25 @@
     under the License.
 */
 
-/* Finite Field arithmetic  Fp^4 functions */
+/* Finite Field arithmetic  Fp^8 functions */
 
-/* FP4 elements are of the form a+ib, where i is sqrt(-1+sqrt(-1))  */
+/* FP8 elements are of the form a+ib, where i is sqrt(sqrt(-1+sqrt(-1)))  */
 
-var FP4 = function(ctx) {
+var FP8 = function(ctx) {
     "use strict";
 
     /* general purpose constructor */
-    var FP4 = function(c, d) {
-        if (c instanceof FP4) {
-            this.a = new ctx.FP2(c.a);
-            this.b = new ctx.FP2(c.b);
+    var FP8 = function(c, d) {
+        if (c instanceof FP8) {
+            this.a = new ctx.FP4(c.a);
+            this.b = new ctx.FP4(c.b);
         } else {
-            this.a = new ctx.FP2(c);
-            this.b = new ctx.FP2(d);
+            this.a = new ctx.FP4(c);
+            this.b = new ctx.FP4(d);
         }
     };
 
-    FP4.prototype = {
+    FP8.prototype = {
         /* reduce all components of this mod Modulus */
         reduce: function() {
             this.a.reduce();
@@ -56,7 +56,7 @@ var FP4 = function(ctx) {
 
         /* test this==1 ? */
         isunity: function() {
-            var one = new ctx.FP2(1);
+            var one = new ctx.FP4(1);
             return (this.a.equals(one) && this.b.iszilch());
         },
 
@@ -108,7 +108,7 @@ var FP4 = function(ctx) {
             this.b.zero();
         },
 
-        /* set from two FP2s */
+        /* set from two FP4s */
         set: function(c, d) {
             this.a.copy(c);
             this.b.copy(d);
@@ -123,8 +123,8 @@ var FP4 = function(ctx) {
         /* this=-this */
         neg: function() {
             this.norm();
-            var m = new ctx.FP2(this.a), //m.copy(this.a);
-                t = new ctx.FP2(0);
+            var m = new ctx.FP4(this.a), //m.copy(this.a);
+                t = new ctx.FP4(0);
 
             m.add(this.b);
             m.neg();
@@ -157,7 +157,7 @@ var FP4 = function(ctx) {
 
         /* this-=x */
         sub: function(x) {
-            var m = new FP4(x); // m.copy(x);
+            var m = new FP8(x); // m.copy(x);
             m.neg();
             this.add(m);
         },
@@ -167,7 +167,7 @@ var FP4 = function(ctx) {
             this.add(x);
         },
 
-        /* this*=s where s is FP2 */
+        /* this*=s where s is FP4 */
         pmul: function(s) {
             this.a.mul(s);
             this.b.mul(s);
@@ -181,16 +181,16 @@ var FP4 = function(ctx) {
 
         /* this*=this */
         sqr: function() {
-            // this.norm();
+            //      this.norm();
 
-            var t1 = new ctx.FP2(this.a), //t1.copy(this.a)
-                t2 = new ctx.FP2(this.b), //t2.copy(this.b)
-                t3 = new ctx.FP2(this.a); //t3.copy(this.a)
+            var t1 = new ctx.FP4(this.a), //t1.copy(this.a)
+                t2 = new ctx.FP4(this.b), //t2.copy(this.b)
+                t3 = new ctx.FP4(this.a); //t3.copy(this.a)
 
             t3.mul(this.b);
             t1.add(this.b);
             t1.norm();
-            t2.mul_ip();
+            t2.times_i();
 
             t2.add(this.a);
             t2.norm();
@@ -199,9 +199,9 @@ var FP4 = function(ctx) {
             this.a.mul(t2);
 
             t2.copy(t3);
-            t2.mul_ip();
+            t2.times_i();
             t2.add(t3);
-            t2.norm();  // ??
+            //t2.norm();  // ??
 
             t2.neg();
 
@@ -215,12 +215,12 @@ var FP4 = function(ctx) {
 
         /* this*=y */
         mul: function(y) {
-            // this.norm();
+            //      this.norm();
 
-            var t1 = new ctx.FP2(this.a), //t1.copy(this.a)
-                t2 = new ctx.FP2(this.b), //t2.copy(this.b)
-                t3 = new ctx.FP2(0),
-                t4 = new ctx.FP2(this.b); //t4.copy(this.b)
+            var t1 = new ctx.FP4(this.a), //t1.copy(this.a)
+                t2 = new ctx.FP4(this.b), //t2.copy(this.b)
+                t3 = new ctx.FP4(0),
+                t4 = new ctx.FP4(this.b); //t4.copy(this.b)
 
             t1.mul(y.a);
             t2.mul(y.b);
@@ -236,7 +236,7 @@ var FP4 = function(ctx) {
             t3.copy(t1);
             t3.neg();
             t4.add(t3);
-            // t4.norm(); // ??
+            //      t4.norm(); // ??
 
             // t4.sub(t1);
 
@@ -245,7 +245,7 @@ var FP4 = function(ctx) {
             this.b.copy(t4);
             this.b.add(t3);
 
-            t2.mul_ip();
+            t2.times_i();
             this.a.copy(t2);
             this.a.add(t1);
 
@@ -261,12 +261,12 @@ var FP4 = function(ctx) {
         inverse: function() {
             this.norm();
 
-            var t1 = new ctx.FP2(this.a), //t1.copy(this.a);
-                t2 = new ctx.FP2(this.b); // t2.copy(this.b);
+            var t1 = new ctx.FP4(this.a), //t1.copy(this.a);
+                t2 = new ctx.FP4(this.b); // t2.copy(this.b);
 
             t1.sqr();
             t2.sqr();
-            t2.mul_ip();
+            t2.times_i();
             t2.norm(); // ??
             t1.sub(t2);
             t1.inverse();
@@ -278,21 +278,28 @@ var FP4 = function(ctx) {
 
         /* this*=i where i = sqrt(-1+sqrt(-1)) */
         times_i: function() {
-            var s = new ctx.FP2(this.b), //s.copy(this.b);
-                t = new ctx.FP2(this.b); //t.copy(this.b);
+            var s = new ctx.FP4(this.b),
+                t = new ctx.FP4(this.a);
 
             s.times_i();
-            t.add(s);
-            this.b.copy(this.a);
-            this.a.copy(t);
+            this.b.copy(t);
+
+            this.a.copy(s);
             this.norm();
+        },
+
+        times_i2: function() {
+            this.a.times_i();
+            this.b.times_i();
         },
 
         /* this=this^q using Frobenius, where q is Modulus */
         frob: function(f) {
-            this.a.conj();
-            this.b.conj();
-            this.b.mul(f);
+            var ff=new ctx.FP2(f); ff.sqr(); ff.mul_ip(); ff.norm();
+            this.a.frob(ff);
+            this.b.frob(ff);
+            this.b.pmul(f);
+            this.b.times_i();
         },
 
         /* this=this^e */
@@ -300,9 +307,9 @@ var FP4 = function(ctx) {
             this.norm();
             e.norm();
 
-            var w = new FP4(this), //w.copy(this);
+            var w = new FP8(this), //w.copy(this);
                 z = new ctx.BIG(e), //z.copy(e);
-                r = new FP4(1),
+                r = new FP8(1),
                 bt;
 
             for (;;) {
@@ -326,8 +333,8 @@ var FP4 = function(ctx) {
 
         /* XTR xtr_a function */
         xtr_A: function(w, y, z) {
-            var r = new FP4(w), //r.copy(w);
-                t = new FP4(w); //t.copy(w);
+            var r = new FP8(w), //r.copy(w);
+                t = new FP8(w); //t.copy(w);
 
             //y.norm(); // ??
             r.sub(y);
@@ -347,7 +354,7 @@ var FP4 = function(ctx) {
 
         /* XTR xtr_d function */
         xtr_D: function() {
-            var w = new FP4(this); //w.copy(this);
+            var w = new FP8(this); //w.copy(this);
             this.sqr();
             w.conj();
             w.add(w); //w.norm(); // ??
@@ -357,11 +364,11 @@ var FP4 = function(ctx) {
 
         /* r=x^n using XTR method on traces of FP12s */
         xtr_pow: function(n) {
-            var a = new FP4(3),
-                b = new FP4(this),
-                c = new FP4(b),
-                t = new FP4(0),
-                r = new FP4(0),
+            var a = new FP8(3),
+                b = new FP8(this),
+                c = new FP8(b),
+                t = new FP8(0),
+                r = new FP8(0),
                 par, v, nb, i;
 
             c.xtr_D();
@@ -416,12 +423,12 @@ var FP4 = function(ctx) {
             var e = new ctx.BIG(a), //e.copy(a)
                 d = new ctx.BIG(b), //d.copy(b)
                 w = new ctx.BIG(0),
-                cu = new FP4(ck), //cu.copy(ck), // can probably be passed in w/o copying
-                cv = new FP4(this), //cv.copy(this),
-                cumv = new FP4(ckml), //cumv.copy(ckml),
-                cum2v = new FP4(ckm2l), //cum2v.copy(ckm2l),
-                r = new FP4(0),
-                t = new FP4(0),
+                cu = new FP8(ck), //cu.copy(ck), // can probably be passed in w/o copying
+                cv = new FP8(this), //cv.copy(this),
+                cumv = new FP8(ckml), //cumv.copy(ckml),
+                cum2v = new FP8(ckm2l), //cum2v.copy(ckm2l),
+                r = new FP8(0),
+                t = new FP8(0),
                 f2 = 0,
                 i;
 
@@ -563,17 +570,22 @@ var FP4 = function(ctx) {
         },
 
         div_i: function() {
-            var u=new ctx.FP2(this.a),
-                v=new ctx.FP2(this.b);
-            u.div_ip();
+            var u=new ctx.FP4(this.a),
+                v=new ctx.FP4(this.b);
+            u.div_i();
             this.a.copy(v);
             this.b.copy(u);
         },
 
+        div_i2: function() {
+            this.a.div_i();
+            this.b.div_i();
+        },
+
         div_2i: function() {
-            var u=new ctx.FP2(this.a),
-                v=new ctx.FP2(this.b);
-            u.div_ip2();
+            var u=new ctx.FP4(this.a),
+                v=new ctx.FP4(this.b);
+            u.div_2i();
             v.add(v); v.norm();
             this.a.copy(v);
             this.b.copy(u);
@@ -584,19 +596,24 @@ var FP4 = function(ctx) {
             this.b.pmul(s);
         },
 
+        tmul: function(s) {
+            this.a.qmul(s);
+            this.b.qmul(s);
+        },
+
         sqrt: function() {
             if (this.iszilch()) {
                 return true;
             }
-            var wa=new ctx.FP2(this.a),
-                ws=new ctx.FP2(this.b),
-                wt=new ctx.FP2(this.a);
+            var wa=new ctx.FP4(this.a),
+                ws=new ctx.FP4(this.b),
+                wt=new ctx.FP4(this.a);
             if (ws.iszilch()) {
                 if (wt.sqrt()) {
                     this.a.copy(wt);
                     this.b.zero();
                 } else {
-                    wt.div_ip();
+                    wt.div_i();
                     wt.sqrt();
                     this.b.copy(wt);
                     this.a.zero();
@@ -606,7 +623,7 @@ var FP4 = function(ctx) {
 
             ws.sqr();
             wa.sqr();
-            ws.mul_ip();
+            ws.times_i();
             ws.norm();
             wa.sub(ws);
 
@@ -636,11 +653,11 @@ var FP4 = function(ctx) {
 
     };
 
-    return FP4;
+    return FP8;
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
     module.exports = {
-        FP4: FP4
+        FP8: FP8
     };
 }

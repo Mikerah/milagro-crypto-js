@@ -19,10 +19,10 @@
 
 /* MPIN API Functions */
 
-var MPIN = function(ctx) {
+var MPIN192 = function(ctx) {
     "use strict";
 
-    var MPIN = {
+    var MPIN192 = {
         BAD_PARAMS: -11,
         INVALID_POINT: -14,
         WRONG_ORDER: -18,
@@ -98,30 +98,47 @@ var MPIN = function(ctx) {
                 h = [],
                 H, R, i;
 
-            c.geta().getA().toBytes(w);
+            c.geta().geta().getA().toBytes(w);
             for (i = 0; i < this.EFS; i++) {
                 t[i] = w[i];
             }
-            c.geta().getB().toBytes(w);
+            c.geta().geta().getB().toBytes(w);
             for (i = this.EFS; i < 2 * this.EFS; i++) {
                 t[i] = w[i - this.EFS];
             }
-            c.getb().getA().toBytes(w);
+            c.geta().getb().getA().toBytes(w);
             for (i = 2 * this.EFS; i < 3 * this.EFS; i++) {
                 t[i] = w[i - 2 * this.EFS];
             }
-            c.getb().getB().toBytes(w);
+            c.geta().getb().getB().toBytes(w);
             for (i = 3 * this.EFS; i < 4 * this.EFS; i++) {
                 t[i] = w[i - 3 * this.EFS];
             }
 
-            U.getX().toBytes(w);
+            c.getb().geta().getA().toBytes(w);
             for (i = 4 * this.EFS; i < 5 * this.EFS; i++) {
                 t[i] = w[i - 4 * this.EFS];
             }
-            U.getY().toBytes(w);
+            c.getb().geta().getB().toBytes(w);
             for (i = 5 * this.EFS; i < 6 * this.EFS; i++) {
                 t[i] = w[i - 5 * this.EFS];
+            }
+            c.getb().getb().getA().toBytes(w);
+            for (i = 6 * this.EFS; i < 7 * this.EFS; i++) {
+                t[i] = w[i - 6 * this.EFS];
+            }
+            c.getb().getb().getB().toBytes(w);
+            for (i = 7 * this.EFS; i < 8 * this.EFS; i++) {
+                t[i] = w[i - 7 * this.EFS];
+            }
+
+            U.getX().toBytes(w);
+            for (i = 8 * this.EFS; i < 9 * this.EFS; i++) {
+                t[i] = w[i - 8 * this.EFS];
+            }
+            U.getY().toBytes(w);
+            for (i = 9 * this.EFS; i < 10 * this.EFS; i++) {
+                t[i] = w[i - 9 * this.EFS];
             }
 
             if (sha == this.SHA256) {
@@ -346,8 +363,8 @@ var MPIN = function(ctx) {
 
         /* W=W1+W2 in group G2 */
         RECOMBINE_G2: function(W1, W2, W) {
-            var P = ctx.ECP2.fromBytes(W1),
-                Q = ctx.ECP2.fromBytes(W2);
+            var P = ctx.ECP4.fromBytes(W1),
+                Q = ctx.ECP4.fromBytes(W2);
 
             if (P.is_infinity() || Q.is_infinity()) {
                 return this.INVALID_POINT;
@@ -432,10 +449,10 @@ var MPIN = function(ctx) {
         GET_SERVER_SECRET: function(S, SST) {
             var s,Q;
 
-            Q = ctx.ECP2.generator();
+            Q = ctx.ECP4.generator();
 
             s = ctx.BIG.fromBytes(S);
-            Q = ctx.PAIR.G2mul(Q, s);
+            Q = ctx.PAIR192.G2mul(Q, s);
             Q.toBytes(SST);
 
             return 0;
@@ -473,7 +490,7 @@ var MPIN = function(ctx) {
                 P = ctx.ECP.mapit(G);
             }
 
-            ctx.PAIR.G1mul(P, x).toBytes(W,false);
+            ctx.PAIR192.G1mul(P, x).toBytes(W,false);
 
             return 0;
         },
@@ -490,7 +507,7 @@ var MPIN = function(ctx) {
                 P = ctx.ECP.mapit(h),
                 s = ctx.BIG.fromBytes(S);
 
-            P = ctx.PAIR.G1mul(P, s);
+            P = ctx.PAIR192.G1mul(P, s);
             P.toBytes(CTT,false);
 
             return 0;
@@ -538,13 +555,13 @@ var MPIN = function(ctx) {
                 W = ctx.ECP.mapit(h);
 
                 if (xID != null) {
-                    P = ctx.PAIR.G1mul(P, x);
+                    P = ctx.PAIR192.G1mul(P, x);
                     P.toBytes(xID,false);
-                    W = ctx.PAIR.G1mul(W, x);
+                    W = ctx.PAIR192.G1mul(W, x);
                     P.add(W);
                 } else {
                     P.add(W);
-                    P = ctx.PAIR.G1mul(P, x);
+                    P = ctx.PAIR192.G1mul(P, x);
                 }
 
                 if (xCID != null) {
@@ -552,7 +569,7 @@ var MPIN = function(ctx) {
                 }
             } else {
                 if (xID != null) {
-                    P = ctx.PAIR.G1mul(P, x);
+                    P = ctx.PAIR192.G1mul(P, x);
                     P.toBytes(xID,false);
                 }
             }
@@ -580,10 +597,10 @@ var MPIN = function(ctx) {
             px.mod(r);
             //  px.rsub(r);
 
-            P = ctx.PAIR.G1mul(P, px);
+            P = ctx.PAIR192.G1mul(P, px);
             P.neg();
             P.toBytes(SEC,false);
-            //ctx.PAIR.G1mul(P,px).toBytes(SEC,false);
+            //ctx.PAIR192.G1mul(P,px).toBytes(SEC,false);
 
             return 0;
         },
@@ -610,16 +627,16 @@ var MPIN = function(ctx) {
             var Q, sQ, R, y, P, g;
 
             if (typeof Pa === "undefined" || Pa == null) {
-                Q = ctx.ECP2.generator();
+                Q = ctx.ECP4.generator();
 
             } else {
-                Q = ctx.ECP2.fromBytes(Pa);
+                Q = ctx.ECP4.fromBytes(Pa);
                 if (Q.is_infinity()) {
                     return this.INVALID_POINT;
                 }
             }
 
-            sQ = ctx.ECP2.fromBytes(SST);
+            sQ = ctx.ECP4.fromBytes(SST);
             if (sQ.is_infinity()) {
                 return this.INVALID_POINT;
             }
@@ -652,7 +669,7 @@ var MPIN = function(ctx) {
                 return this.INVALID_POINT;
             }
 
-            P = ctx.PAIR.G1mul(P, y);
+            P = ctx.PAIR192.G1mul(P, y);
             P.add(R);
             P.affine();
             R = ctx.ECP.fromBytes(mSEC);
@@ -660,8 +677,8 @@ var MPIN = function(ctx) {
                 return this.INVALID_POINT;
             }
 
-            g = ctx.PAIR.ate2(Q, R, sQ, P);
-            g = ctx.PAIR.fexp(g);
+            g = ctx.PAIR192.ate2(Q, R, sQ, P);
+            g = ctx.PAIR192.fexp(g);
 
             if (!g.isunity()) {
                 if (HID != null && xID != null && E != null && F != null) {
@@ -678,12 +695,12 @@ var MPIN = function(ctx) {
                             return this.INVALID_POINT;
                         }
 
-                        P = ctx.PAIR.G1mul(P, y);
+                        P = ctx.PAIR192.G1mul(P, y);
                         P.add(R);
                         P.affine();
                     }
-                    g = ctx.PAIR.ate(Q, P);
-                    g = ctx.PAIR.fexp(g);
+                    g = ctx.PAIR192.ate(Q, P);
+                    g = ctx.PAIR192.fexp(g);
 
                     g.toBytes(F);
                 }
@@ -696,24 +713,24 @@ var MPIN = function(ctx) {
 
         /* Pollards kangaroos used to return PIN error */
         KANGAROO: function(E, F) {
-            var ge = ctx.FP12.fromBytes(E),
-                gf = ctx.FP12.fromBytes(F),
+            var ge = ctx.FP24.fromBytes(E),
+                gf = ctx.FP24.fromBytes(F),
                 distance = [],
-                t = new ctx.FP12(gf),
+                t = new ctx.FP24(gf),
                 table = [],
                 i, j, m, s, dn, dm, res, steps;
 
             s = 1;
             for (m = 0; m < this.TS; m++) {
                 distance[m] = s;
-                table[m] = new ctx.FP12(t);
+                table[m] = new ctx.FP24(t);
                 s *= 2;
                 t.usqr();
             }
             t.one();
             dn = 0;
             for (j = 0; j < this.TRAP; j++) {
-                i = t.geta().geta().getA().lastbits(20) % this.TS;
+                i = t.geta().geta().geta().getA().lastbits(20) % this.TS;
                 t.mul(table[i]);
                 dn += distance[i];
             }
@@ -727,7 +744,7 @@ var MPIN = function(ctx) {
                 if (steps > 4 * this.TRAP) {
                     break;
                 }
-                i = ge.geta().geta().getA().lastbits(20) % this.TS;
+                i = ge.geta().geta().geta().getA().lastbits(20) % this.TS;
                 ge.mul(table[i]);
                 dm += distance[i];
                 if (ge.equals(t)) {
@@ -849,14 +866,14 @@ var MPIN = function(ctx) {
             }
 
             P = ctx.ECP.mapit(CID);
-            Q = ctx.ECP2.generator();
+            Q = ctx.ECP4.generator();
 
-            g = ctx.PAIR.ate(Q, T);
-            g = ctx.PAIR.fexp(g);
+            g = ctx.PAIR192.ate(Q, T);
+            g = ctx.PAIR192.fexp(g);
             g.toBytes(G1);
 
-            g = ctx.PAIR.ate(Q, P);
-            g = ctx.PAIR.fexp(g);
+            g = ctx.PAIR192.ate(Q, P);
+            g = ctx.PAIR192.fexp(g);
             g.toBytes(G2);
 
             return 0;
@@ -913,8 +930,8 @@ var MPIN = function(ctx) {
         /* wCID = w.(A+AT) */
         CLIENT_KEY: function(sha, G1, G2, pin, R, X, H, wCID, CK) {
             var t = [],
-                g1 = ctx.FP12.fromBytes(G1),
-                g2 = ctx.FP12.fromBytes(G2),
+                g1 = ctx.FP24.fromBytes(G1),
+                g2 = ctx.FP24.fromBytes(G2),
                 z = ctx.BIG.fromBytes(R),
                 x = ctx.BIG.fromBytes(X),
                 h = ctx.BIG.fromBytes(H),
@@ -925,11 +942,7 @@ var MPIN = function(ctx) {
                 return this.INVALID_POINT;
             }
 
-            W = ctx.PAIR.G1mul(W, x);
-
-            //  var fa=new ctx.BIG(0); fa.rcopy(ctx.ROM_FIELD.Fra);
-            //  var fb=new ctx.BIG(0); fb.rcopy(ctx.ROM_FIELD.Frb);
-            //  var f=new ctx.FP2(fa,fb); //f.bset(fa,fb);
+            W = ctx.PAIR192.G1mul(W, x);
 
             r = new ctx.BIG(0);
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
@@ -942,27 +955,6 @@ var MPIN = function(ctx) {
             g1.mul(g2);
 
             c = g1.compow(z, r);
-            // var m=new ctx.BIG(q);
-            // m.mod(r);
-
-            // var a=new ctx.BIG(z);
-            // a.mod(m);
-
-            // var b=new ctx.BIG(z);
-            // b.div(m);
-
-
-            // var c=g1.trace();
-            // g2.copy(g1);
-            // g2.frob(f);
-            // var cp=g2.trace();
-            // g1.conj();
-            // g2.mul(g1);
-            // var cpm1=g2.trace();
-            // g2.mul(g1);
-            // var cpm2=g2.trace();
-
-            // c=c.xtr_pow2(cp,cpm1,cpm2,a,b);
 
             t = this.mpin_hash(sha, c, W);
 
@@ -980,7 +972,7 @@ var MPIN = function(ctx) {
             var t = [],
                 sQ, R, A, U, w, h, g, c, i;
 
-            sQ = ctx.ECP2.fromBytes(SST);
+            sQ = ctx.ECP4.fromBytes(SST);
             if (sQ.is_infinity()) {
                 return this.INVALID_POINT;
             }
@@ -1007,13 +999,13 @@ var MPIN = function(ctx) {
 
             w = ctx.BIG.fromBytes(W);
             h = ctx.BIG.fromBytes(H);
-            A = ctx.PAIR.G1mul(A, h);
+            A = ctx.PAIR192.G1mul(A, h);
             R.add(A);
             R.affine();
 
-            U = ctx.PAIR.G1mul(U, w);
-            g = ctx.PAIR.ate(sQ, R);
-            g = ctx.PAIR.fexp(g);
+            U = ctx.PAIR192.G1mul(U, w);
+            g = ctx.PAIR192.ate(sQ, R);
+            g = ctx.PAIR192.fexp(g);
 
             c = g.trace();
 
@@ -1026,12 +1018,6 @@ var MPIN = function(ctx) {
             return 0;
         },
 
-        /* Generate a public key and the corresponding z for the key-escrow less scheme */
-        /*
-            if R==NULL then Z is passed in
-            if R!=NULL then Z is passed out
-            Pa=(z^-1).Q
-        */
         GET_DVS_KEYPAIR: function(rng, Z, Pa) {
             var r = new ctx.BIG(0),
                 z, Q;
@@ -1046,20 +1032,20 @@ var MPIN = function(ctx) {
             }
             z.invmodp(r);
 
-            Q = ctx.ECP2.generator();
+            Q = ctx.ECP4.generator();
 
-            Q = ctx.PAIR.G2mul(Q, z);
+            Q = ctx.PAIR192.G2mul(Q, z);
             Q.toBytes(Pa);
 
             return 0;
         }
     };
 
-    return MPIN;
+    return MPIN192;
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
     module.exports = {
-        MPIN: MPIN
+        MPIN192: MPIN192
     };
 }

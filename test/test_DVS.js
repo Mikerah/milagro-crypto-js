@@ -34,7 +34,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
     describe('TEST DVS ' + pf_curves[i], function() {
 
         var rng = new ctx.RAND();
-        var sha = ctx.MPIN.HASH_TYPE;
+        var sha = ctx.ECP.HASH_TYPE;
 
         before(function(done) {
             var RAW = [];
