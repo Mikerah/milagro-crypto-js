@@ -25,7 +25,8 @@ var chai = require('chai');
 
 var expect = chai.expect;
 
-var pf_curves = ['BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN','BLS24','BLS48'];
+
 
 for (var i = pf_curves.length - 1; i >= 0; i--) {
 
@@ -45,18 +46,6 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
         var G2 = new ctx.ECP(0);
         var G3 = new ctx.ECP(0);
 
-        var Q = new ctx.ECP2(0);
-        var Q1 = new ctx.ECP2(0);
-        var Q2 = new ctx.ECP2(0);
-        var Q3 = new ctx.ECP2(0);
-
-        var g1 = new ctx.FP12(0);
-        var g2 = new ctx.FP12(0);
-        var g3 = new ctx.FP12(0);
-
-        var qx = new ctx.FP2(0);
-        var qy = new ctx.FP2(0);
-
         // Set curve order
         r.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
@@ -65,14 +54,124 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
         y.rcopy(ctx.ROM_CURVE.CURVE_Gy);
         G.setxy(x,y);
 
-        // Set generator of G2
-        x.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
-        y.rcopy(ctx.ROM_CURVE.CURVE_Pxb);
-        qx.bset(x, y);
-        x.rcopy(ctx.ROM_CURVE.CURVE_Pya);
-        y.rcopy(ctx.ROM_CURVE.CURVE_Pyb);
-        qy.bset(x, y);
-        Q.setxy(qx, qy);
+
+        if (ctx.ECP.CURVE_PAIRING_TYPE === 1 | ctx.ECP.CURVE_PAIRING_TYPE === 2) {
+            // Set pairing interface
+            var PAIR = ctx.PAIR;
+
+            var Q = new ctx.ECP2(0);
+            var Q1 = new ctx.ECP2(0);
+            var Q2 = new ctx.ECP2(0);
+            var Q3 = new ctx.ECP2(0);
+
+            var g1 = new ctx.FP12(0);
+            var g2 = new ctx.FP12(0);
+            var g3 = new ctx.FP12(0);
+
+            var qx = new ctx.FP2(0);
+            var qy = new ctx.FP2(0);
+
+            // Set generator of G2
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxb);
+            qx.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pya);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pyb);
+            qy.bset(x, y);
+            Q.setxy(qx, qy);
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 3) {
+            var Q = new ctx.ECP4(0);
+            var Q1 = new ctx.ECP4(0);
+            var Q2 = new ctx.ECP4(0);
+            var Q3 = new ctx.ECP4(0);
+
+            var g1 = new ctx.FP24(0);
+            var g2 = new ctx.FP24(0);
+            var g3 = new ctx.FP24(0);
+
+            var qca = new ctx.FP2(0);
+            var qcb = new ctx.FP2(0);
+
+            var qx = new ctx.FP4(0);
+            var qy = new ctx.FP4(0);
+
+            // Set pairing interface
+            var PAIR = ctx.PAIR192;
+
+            // Set generator of G2
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxaa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxab);
+            qca.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxba);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxbb);
+            qcb.bset(x, y);
+            qx.set(qca,qcb);
+
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pyaa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pyab);
+            qca.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pyba);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pybb);
+            qcb.bset(x, y);
+            qy.set(qca,qcb);
+
+            Q.setxy(qx, qy);
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 4) {
+            // Set pairing interface
+            PAIR = ctx.PAIR256;
+
+            var Q = new ctx.ECP8(0);
+            var Q1 = new ctx.ECP8(0);
+            var Q2 = new ctx.ECP8(0);
+            var Q3 = new ctx.ECP8(0);
+
+            var g1 = new ctx.FP48(0);
+            var g2 = new ctx.FP48(0);
+            var g3 = new ctx.FP48(0);
+
+            var qcca = new ctx.FP2(0);
+            var qccb = new ctx.FP2(0);
+            var qca = new ctx.FP4(0);
+            var qcb = new ctx.FP4(0);
+
+            var qx = new ctx.FP8(0);
+            var qy = new ctx.FP8(0);
+
+            // Set generator of G2
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxaaa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxaab);
+            qcca.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxaba);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxabb);
+            qccb.bset(x, y);
+            qca.set(qcca,qccb);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxbaa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxbab);
+            qcca.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxbba);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxbbb);
+            qccb.bset(x, y);
+            qcb.set(qcca,qccb);
+            qx.set(qca,qcb);
+
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxaaa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxaab);
+            qcca.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxaba);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxabb);
+            qccb.bset(x, y);
+            qca.set(qcca,qccb);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxbaa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxbab);
+            qcca.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxbba);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxbbb);
+            qccb.bset(x, y);
+            qcb.set(qcca,qccb);
+            qx.set(qca,qcb);
+
+            Q.setxy(qx, qy);
+        }
 
 
 
@@ -92,21 +191,21 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
                 x = ctx.BIG.randomnum(r,rng);
                 y = ctx.BIG.randomnum(r,rng);
                 s = ctx.BIG.randomnum(r,rng);
-                G1 = ctx.PAIR.G1mul(G,x);
-                Q1 = ctx.PAIR.G2mul(Q,y);
-                G2 = ctx.PAIR.G1mul(G1,s);
-                Q2 = ctx.PAIR.G2mul(Q1,s);
+                G1 = PAIR.G1mul(G,x);
+                Q1 = PAIR.G2mul(Q,y);
+                G2 = PAIR.G1mul(G1,s);
+                Q2 = PAIR.G2mul(Q1,s);
                 
-                g1 = ctx.PAIR.ate(Q1, G2);
-                g1 = ctx.PAIR.fexp(g1);
-                g2 = ctx.PAIR.ate(Q2, G1);
-                g2 = ctx.PAIR.fexp(g2);
+                g1 = PAIR.ate(Q1, G2);
+                g1 = PAIR.fexp(g1);
+                g2 = PAIR.ate(Q2, G1);
+                g2 = PAIR.fexp(g2);
 
                 expect(g1.toString()).to.be.equal(g2.toString());
                 
-                g2 = ctx.PAIR.ate(Q1, G1);
-                g2 = ctx.PAIR.fexp(g2);
-                g2 = ctx.PAIR.GTpow(g2,s);
+                g2 = PAIR.ate(Q1, G1);
+                g2 = PAIR.fexp(g2);
+                g2 = PAIR.GTpow(g2,s);
 
                 expect(g1.toString()).to.be.equal(g2.toString());
             }
@@ -120,38 +219,38 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             for (var k = 3; k > 0; k--) {
                 x = ctx.BIG.randomnum(r,rng);
                 y = ctx.BIG.randomnum(r,rng);
-                G1 = ctx.PAIR.G1mul(G,x);
-                Q1 = ctx.PAIR.G2mul(Q,y);
+                G1 = PAIR.G1mul(G,x);
+                Q1 = PAIR.G2mul(Q,y);
                 x = ctx.BIG.randomnum(r,rng);
                 y = ctx.BIG.randomnum(r,rng);
-                G2 = ctx.PAIR.G1mul(G,x);
-                Q2 = ctx.PAIR.G2mul(Q,y);
+                G2 = PAIR.G1mul(G,x);
+                Q2 = PAIR.G2mul(Q,y);
 
-                g2 = ctx.PAIR.ate(Q1, G1);
-                g2 = ctx.PAIR.fexp(g2);
-                g3 = ctx.PAIR.ate(Q1, G2);
-                g3 = ctx.PAIR.fexp(g3);
+                g2 = PAIR.ate(Q1, G1);
+                g2 = PAIR.fexp(g2);
+                g3 = PAIR.ate(Q1, G2);
+                g3 = PAIR.fexp(g3);
                 g2.mul(g3);
 
                 G2.add(G1);
                 G2.affine();
 
-                g1 = ctx.PAIR.ate(Q1, G2);
-                g1 = ctx.PAIR.fexp(g1);
+                g1 = PAIR.ate(Q1, G2);
+                g1 = PAIR.fexp(g1);
 
                 expect(g1.toString()).to.be.equal(g2.toString());
 
-                g2 = ctx.PAIR.ate(Q1, G1);
-                g2 = ctx.PAIR.fexp(g2);
-                g3 = ctx.PAIR.ate(Q2, G1);
-                g3 = ctx.PAIR.fexp(g3);
+                g2 = PAIR.ate(Q1, G1);
+                g2 = PAIR.fexp(g2);
+                g3 = PAIR.ate(Q2, G1);
+                g3 = PAIR.fexp(g3);
                 g2.mul(g3);
 
                 Q2.add(Q1);
                 Q2.affine();
 
-                g1 = ctx.PAIR.ate(Q2, G1);
-                g1 = ctx.PAIR.fexp(g1);
+                g1 = PAIR.ate(Q2, G1);
+                g1 = PAIR.fexp(g1);
 
                 expect(g1.toString()).to.be.equal(g2.toString());
             }
@@ -165,27 +264,25 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             for (var k = 3; k > 0; k--) {
                 x = ctx.BIG.randomnum(r,rng);
                 y = ctx.BIG.randomnum(r,rng);
-                G1 = ctx.PAIR.G1mul(G,x);
-                Q1 = ctx.PAIR.G2mul(Q,y);
+                G1 = PAIR.G1mul(G,x);
+                Q1 = PAIR.G2mul(Q,y);
                 x = ctx.BIG.randomnum(r,rng);
                 y = ctx.BIG.randomnum(r,rng);
-                G2 = ctx.PAIR.G1mul(G,x);
-                Q2 = ctx.PAIR.G2mul(Q,y);
+                G2 = PAIR.G1mul(G,x);
+                Q2 = PAIR.G2mul(Q,y);
 
-                g1 = ctx.PAIR.ate(Q1, G1);
-                g1 = ctx.PAIR.fexp(g1);
-                g2 = ctx.PAIR.ate(Q2, G2);
-                g2 = ctx.PAIR.fexp(g2);
+                g1 = PAIR.ate(Q1, G1);
+                g1 = PAIR.fexp(g1);
+                g2 = PAIR.ate(Q2, G2);
+                g2 = PAIR.fexp(g2);
                 g1.mul(g2);
 
-                g2 = ctx.PAIR.ate2(Q1,G1,Q2,G2);
-                g2 = ctx.PAIR.fexp(g2);
+                g2 = PAIR.ate2(Q1,G1,Q2,G2);
+                g2 = PAIR.fexp(g2);
 
                 expect(g1.toString()).to.be.equal(g2.toString());
             }
             done();
         });
-
-
     });
 }
