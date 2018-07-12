@@ -12,7 +12,7 @@ with the License.  You may obtain a copy of the License at
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
 "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
+KIND, either exprtns or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
@@ -27,50 +27,48 @@ pf_curves = ['BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
 
 var expect = chai.expect;
 
-for (var i = pf_curves.length - 1; i >= 0; i--) {
+pf_curves.forEach(function(curve) {
 
-    var ctx = new CTX(pf_curves[i]);
+    var ctx = new CTX(curve);
 
-    describe('TEST DVS ' + pf_curves[i], function() {
+    describe('TEST DVS ' + curve, function() {
 
         var rng = new ctx.RAND();
         var sha = ctx.ECP.HASH_TYPE;
 
+        var pin = 1234,
+            pin2 = 2345,
+            IDstr = "testuser@miracl.com",
+            message = "Message to sign",
+            S = [],
+            SST = [],
+            TOKEN = [],
+            SEC = [],
+            xID = [],
+            X = [],
+            Y1 = [],
+            Y2 = [],
+            Z = [],
+            Pa = [],
+            U = [],
+            CLIENT_ID, rtn, date, timeValue;
+
         before(function(done) {
+            this.timeout(0);
+
             var RAW = [];
             rng.clean();
             for (i = 0; i < 100; i++) RAW[i] = i;
             rng.seed(100, RAW);
-            done();
-        });
-
-        it('test Good Signature', function(done) {
-            this.timeout(0);
-
-            var res;
-
-            var S = [];
-            var SST = [];
-            var TOKEN = [];
-            var SEC = [];
-            var xID = [];
-            var X = [];
-            var Y1 = [];
-            var Y2 = [];
-            var Z = [];
-            var Pa = [];
-            var U = [];
 
             /* Trusted Authority set-up */
             ctx.MPIN.RANDOM_GENERATE(rng, S);
 
             /* Create Client Identity */
-            var IDstr = "testuser@miracl.com";
-            var CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
+            CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
 
             /* Generate ctx.RANDom public key and z */
-            res = ctx.MPIN.GET_DVS_KEYPAIR(rng, Z, Pa);
-            expect(res).to.be.equal(0);
+            ctx.MPIN.GET_DVS_KEYPAIR(rng, Z, Pa);
 
             /* Append Pa to ID */
             for (var i = 0; i < Pa.length; i++)
@@ -84,96 +82,42 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             ctx.MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
 
             /* Compute client secret for key escrow less scheme z.CS */
-            res = ctx.MPIN.GET_G1_MULTIPLE(null, 0, Z, TOKEN, TOKEN);
-            expect(res).to.be.equal(0);
+            ctx.MPIN.GET_G1_MULTIPLE(null, 0, Z, TOKEN, TOKEN);
 
             /* Client extracts PIN from secret to create Token */
-            var pin = 1234;
-            res = ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
-            expect(res).to.be.equal(0);
+            ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
 
-            var date = 0;
-            var timeValue = ctx.MPIN.GET_TIME();
+            done();
+        });
 
-            var message = "Message to sign";
+        it('test Good Signature', function(done) {
+            this.timeout(0);
 
-            res = ctx.MPIN.CLIENT(sha, 0, CLIENT_ID, rng, X, pin, TOKEN, SEC, U, null, null, timeValue, Y1, message);
-            expect(res).to.be.equal(0);
+            date = 0;
+            timeValue = ctx.MPIN.GET_TIME();
+
+            rtn = ctx.MPIN.CLIENT(sha, 0, CLIENT_ID, rng, X, pin, TOKEN, SEC, U, null, null, timeValue, Y1, message);
+            expect(rtn).to.be.equal(0);
 
             /* Server  */
-            res = ctx.MPIN.SERVER(sha, 0, xID, null, Y2, SST, U, null, SEC, null, null, CLIENT_ID, timeValue, message, Pa);
-            expect(res).to.be.equal(0);
+            rtn = ctx.MPIN.SERVER(sha, 0, xID, null, Y2, SST, U, null, SEC, null, null, CLIENT_ID, timeValue, message, Pa);
+            expect(rtn).to.be.equal(0);
             done();
         });
 
         it('test Bad Signature', function(done) {
             this.timeout(0);
 
-            var res;
+            date = 0;
+            timeValue = ctx.MPIN.GET_TIME();
 
-            var S = [];
-            var SST = [];
-            var TOKEN = [];
-            var SEC = [];
-            var xID = [];
-            var X = [];
-            var Y1 = [];
-            var Y2 = [];
-            var Z1 = [];
-            var Z2 = [];
-            var Pa1 = [];
-            var Pa2 = [];
-            var U = [];
-
-            /* Trusted Authority set-up */
-            ctx.MPIN.RANDOM_GENERATE(rng, S);
-
-            /* Create Client Identity */
-            var IDstr = "testuser@miracl.com";
-            var CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
-
-            /* Generate ctx.RANDom public key and z */
-            res = ctx.MPIN.GET_DVS_KEYPAIR(rng, Z1, Pa1);
-            expect(res).to.be.equal(0);
-
-            /* Generate ctx.RANDom public key and z */
-            res = ctx.MPIN.GET_DVS_KEYPAIR(rng, Z2, Pa2);
-            expect(res).to.be.equal(0);
-
-            /* Append Pa1 to ID */
-            for (var i = 0; i < Pa1.length; i++)
-                CLIENT_ID.push(Pa1[i]);
-
-            /* Hash Client ID */
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID);
-
-            /* Client and Server are issued secrets by DTA */
-            ctx.MPIN.GET_SERVER_SECRET(S, SST);
-            ctx.MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
-
-            /* Compute client secret for key escrow less scheme z.CS */
-            res = ctx.MPIN.GET_G1_MULTIPLE(null, 0, Z1, TOKEN, TOKEN);
-            expect(res).to.be.equal(0);
-
-            /* Client extracts PIN from secret to create Token */
-            var pin = 1234;
-            res = ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
-            expect(res).to.be.equal(0);
-
-            var date = 0;
-            var timeValue = ctx.MPIN.GET_TIME();
-
-            var message = "Message to sign";
-
-            res = ctx.MPIN.CLIENT(sha, 0, CLIENT_ID, rng, X, pin, TOKEN, SEC, U, null, null, timeValue, Y1, message);
-            expect(res).to.be.equal(0);
+            rtn = ctx.MPIN.CLIENT(sha, 0, CLIENT_ID, rng, X, pin2, TOKEN, SEC, U, null, null, timeValue, Y1, message);
+            expect(rtn).to.be.equal(0);
 
             /* Server  */
-            res = ctx.MPIN.SERVER(sha, 0, xID, null, Y2, SST, U, null, SEC, null, null, CLIENT_ID, timeValue, message, Pa2);
-            expect(res).to.be.equal(ctx.MPIN.BAD_PIN);
+            rtn = ctx.MPIN.SERVER(sha, 0, xID, null, Y2, SST, U, null, SEC, null, null, CLIENT_ID, timeValue, message, Pa);
+            expect(rtn).to.be.equal(ctx.MPIN.BAD_PIN);
             done();
         });
-
     });
-
-}
+});

@@ -30,48 +30,40 @@ var ecp_curves = ['ED25519', 'GOLDILOCKS', 'NIST256', 'BRAINPOOL', 'ANSSI', 'HIF
      'NIST521', 'NUMS256W', 'NUMS384W', 'NUMS512W', 'BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'
 ];
 
-var readScalar = function(string, ctx) {
-
-    while (string.length != ctx.BIG.MODBYTES*2) string = "00"+string;
-
-    return ctx.BIG.fromBytes(new Buffer(string, "hex"));
-
+var readBIG = function(string, ctx) {
+    while (string.length != ctx.BIG.MODBYTES*2){string = "00"+string;}
+    return ctx.BIG.fromBytes(Buffer.from(string, "hex"));
 }
 
 var readPoint = function(string, ctx) {
-    
-    var P = new ctx.ECP(0);
-	var cos = string.split(":");
+    var P = new ctx.ECP(),
+        X,Y;
 
-    while (cos[0].length < ctx.BIG.MODBYTES*2) cos[0] = "0"+cos[0];
-    while (cos[1].length < ctx.BIG.MODBYTES*2) cos[1] = "0"+cos[1];
+    string = string.split(":");
 
-    var x = ctx.BIG.fromBytes(new Buffer(cos[0], "hex"));
-    var y = ctx.BIG.fromBytes(new Buffer(cos[1], "hex"));
-    P.setxy(x,y);
+    X = readBIG(string[0],ctx);
+    Y = readBIG(string[1],ctx);
+    P.setxy(X,Y);
 
     return P;
 }
 
 describe('TEST ECP ARITHMETIC', function() {
 
-	var j = ecp_curves.length - 1;
+    ecp_curves.forEach(function(curve) {
 
-    for (var i = ecp_curves.length - 1; i >= 0; i--) {
-
-
-        it('test '+ecp_curves[i], function(done) {
+        it('test '+ curve, function(done) {
             this.timeout(0);
-            var ctx = new CTX(ecp_curves[j]);
-            var vectors = require('../testVectors/ecp/'+ecp_curves[j]+'.json');
-            j = j-1;
 
-            for (var k = 0; k <= vectors.length - 1; k++) {
+            var ctx = new CTX(curve);
+            var vectors = require('../testVectors/ecp/'+curve+'.json');
 
-                var P1 = readPoint(vectors[k].ECP1,ctx);
+            vectors.forEach(function(vector) {
+                var P1 = readPoint(vector.ECP1,ctx);
                 var Paux1 = new ctx.ECP(0);
-                Paux1.copy(P1);
+
                 // test copy and equals
+                Paux1.copy(P1);
                 expect(Paux1.equals(P1)).to.equal(true);
 
                 if (ctx.ECP.CURVETYPE != ctx.ECP.MONTGOMERY) {
@@ -79,20 +71,18 @@ describe('TEST ECP ARITHMETIC', function() {
                     var x = Paux1.getx();
                     var y = Paux1.gety();
                     y.sqr();
-                    var res = ctx.ECP.RHS(x);
+                    x = ctx.ECP.RHS(x);
 
-                    expect(res.toString()).to.equal(y.toString());
+                    expect(x.toString()).to.equal(y.toString());
 
 		            // test commutativity of the sum
-		            var P2 = readPoint(vectors[k].ECP2,ctx);
-		            var Psum = readPoint(vectors[k].ECPsum,ctx);
+		            var P2 = readPoint(vector.ECP2,ctx);
+		            var Psum = readPoint(vector.ECPsum,ctx);
 		            var Paux2 = new ctx.ECP(0);
 		            Paux1.copy(P1);
 		            Paux2.copy(P2);
 		            Paux1.add(P2);
-		            Paux1.affine();
 		            Paux2.add(P1);
-		            Paux2.affine();
 		            expect(Paux1.toString()).to.equal(Psum.toString());
 		            expect(Paux2.toString()).to.equal(Psum.toString());
 
@@ -100,9 +90,7 @@ describe('TEST ECP ARITHMETIC', function() {
 		            Paux2.copy(P2);
 		            Paux2.add(Psum);
 		            Paux2.add(P1);
-		            Paux2.affine();
 		            Paux1.add(Psum)
-		            Paux1.affine();
 		            expect(Paux1.toString()).to.equal(Paux2.toString());
 
                     // Test sum with infinity
@@ -114,64 +102,57 @@ describe('TEST ECP ARITHMETIC', function() {
                     expect(Paux2.toString()).to.equal(P1.toString());
 
 	                // test negative of a point
-	                var Pneg = readPoint(vectors[k].ECPneg,ctx);
+	                var Pneg = readPoint(vector.ECPneg,ctx);
 	                Paux1.copy(P1);
 	                Paux1.neg();
-	                Paux1.affine();
 	                expect(Paux1.toString()).to.equal(Pneg.toString());
 
 	                // test subtraction between points
-	                var Psub = readPoint(vectors[k].ECPsub,ctx);
+	                var Psub = readPoint(vector.ECPsub,ctx);
 	                Paux1.copy(P1);
 	                Paux1.sub(P2);
-	                Paux1.affine();
 	                expect(Paux1.toString()).to.equal(Psub.toString());
             	}
 
                 // test doubling
-                var Pdbl = readPoint(vectors[k].ECPdbl,ctx);
+                var Pdbl = readPoint(vector.ECPdbl,ctx);
                 Paux1.copy(P1);
                 Paux1.dbl();
-                Paux1.affine();
                 expect(Paux1.toString()).to.equal(Pdbl.toString());
 
                 // test scalar multiplication
-                var Pmul = readPoint(vectors[k].ECPmul,ctx);
-                var Scalar1 = readScalar(vectors[k].BIGscalar1, ctx);
+                var Pmul = readPoint(vector.ECPmul,ctx);
+                var Scalar1 = readBIG(vector.BIGscalar1, ctx);
                 Paux1.copy(P1);
                 Paux1 = Paux1.mul(Scalar1);
-                Paux1.affine();
                 expect(Paux1.toString()).to.equal(Pmul.toString());
 
                 if (ctx.ECP.CURVETYPE != ctx.ECP.MONTGOMERY) {
 	                // test multiplication by small integer
-	                var Ppinmul = readPoint(vectors[k].ECPpinmul,ctx);
-	                var Scalar1 = readScalar(vectors[k].BIGscalar1, ctx);
+	                var Ppinmul = readPoint(vector.ECPpinmul,ctx);
 	                Paux1.copy(P1);
 	                Paux1 = Paux1.pinmul(1234,14);
-	                Paux1.affine();
 	                expect(Paux1.toString()).to.equal(Ppinmul.toString());
 
 	                // test mul2
-	                var Pmul2 = readPoint(vectors[k].ECPmul2,ctx);
-	                var Scalar2 = readScalar(vectors[k].BIGscalar2, ctx);
+	                var Pmul2 = readPoint(vector.ECPmul2,ctx);
+                    var Scalar1 = readBIG(vector.BIGscalar1, ctx);
+	                var Scalar2 = readBIG(vector.BIGscalar2, ctx);
 	                Paux1.copy(P1);
 	                Paux2.copy(P2);
-	                Paux1.affine();
 	                Paux1 = Paux1.mul2(Scalar1,Paux2,Scalar2);
 	                expect(Paux1.toString()).to.equal(Pmul2.toString());
 	            }
 
                 // test wrong coordinates and infinity point
-                var Pwrong = readPoint(vectors[k].ECPwrong,ctx);
-                var Pinf = readPoint(vectors[k].ECPinf,ctx);
+                var Pwrong = readPoint(vector.ECPwrong,ctx);
+                var Pinf = readPoint(vector.ECPinf,ctx);
                 // test copy and equals
                 expect(Pwrong.is_infinity()).to.equal(true);
                 expect(Pinf.is_infinity()).to.equal(true);
                 expect(Pwrong.equals(Pinf)).to.equal(true);
-            }
+            });
             done();
         });
-
-    }
+    });
 });
