@@ -33,10 +33,6 @@ var ECP8 = function(ctx) {
     ECP8.prototype = {
         /* Test this=O? */
         is_infinity: function() {
-            // if (this.INF) {
-            //     return true;
-            // }
-
             this.x.reduce();
             this.y.reduce();
             this.z.reduce();
@@ -48,12 +44,10 @@ var ECP8 = function(ctx) {
             this.x.copy(P.x);
             this.y.copy(P.y);
             this.z.copy(P.z);
-            // this.INF = P.INF;
         },
 
         /* set this=O */
         inf: function() {
-            // this.INF = true;
             this.x.zero();
             this.y.one();
             this.z.zero();
@@ -64,9 +58,6 @@ var ECP8 = function(ctx) {
             this.x.cmove(Q.x, d);
             this.y.cmove(Q.y, d);
             this.z.cmove(Q.z, d);
-
-            // bd = (d !== 0) ? true : false;
-            // this.INF ^= (this.INF ^ Q.INF) & bd;
         },
 
         /* Constant time select from pre-computed table */
@@ -268,7 +259,7 @@ var ECP8 = function(ctx) {
 
             rhs = ECP8.RHS(this.x);
 
-            y2 = new ctx.FP8(this.y); //y2.copy(this.y);
+            y2 = new ctx.FP8(this.y);
             y2.sqr();
 
             if (!y2.equals(rhs)) {
@@ -366,7 +357,7 @@ var ECP8 = function(ctx) {
             y3.mul(t0);
             y3.add(x3); //(y^2+3z*2)(y^2-9z^2)+3b.z^2.8y^2
             t1.copy(this.x);
-            t1.mul(iy); //
+            t1.mul(iy);
             this.x.copy(t0);
             this.x.norm();
             this.x.mul(t1);
@@ -415,7 +406,7 @@ var ECP8 = function(ctx) {
             x3.norm(); //x3=Y2+Z2
 
             t4.mul(x3); //t4=(Y1+Z1)(Y2+Z2)
-            x3.copy(t1); //
+            x3.copy(t1);
             x3.add(t2); //X3=Y1.Y2+Z1.Z2
 
             t4.sub(x3);
@@ -670,7 +661,7 @@ var ECP8 = function(ctx) {
 
         rb8=new ctx.FP4(ra4,rb4);
 
-        rx = new ctx.FP8(ra8, rb8); //rx.bset(ra,rb);
+        rx = new ctx.FP8(ra8, rb8);
 
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
@@ -717,7 +708,7 @@ var ECP8 = function(ctx) {
 
         rb8=new ctx.FP4(ra4,rb4);
 
-        ry = new ctx.FP8(ra8, rb8); //ry.bset(ra,rb);
+        ry = new ctx.FP8(ra8, rb8);
 
         P = new ECP8();
         P.setxy(rx, ry);
@@ -780,14 +771,14 @@ var ECP8 = function(ctx) {
             Q[i].affine();
         }
 
-        T1[0] = new ECP8(); T1[0].copy(Q[0]); // Q[0]
-        T1[1] = new ECP8(); T1[1].copy(T1[0]); T1[1].add(Q[1]); // Q[0]+Q[1]
-        T1[2] = new ECP8(); T1[2].copy(T1[0]); T1[2].add(Q[2]); // Q[0]+Q[2]
-        T1[3] = new ECP8(); T1[3].copy(T1[1]); T1[3].add(Q[2]); // Q[0]+Q[1]+Q[2]
-        T1[4] = new ECP8(); T1[4].copy(T1[0]); T1[4].add(Q[3]); // Q[0]+Q[3]
-        T1[5] = new ECP8(); T1[5].copy(T1[1]); T1[5].add(Q[3]); // Q[0]+Q[1]+Q[3]
-        T1[6] = new ECP8(); T1[6].copy(T1[2]); T1[6].add(Q[3]); // Q[0]+Q[2]+Q[3]
-        T1[7] = new ECP8(); T1[7].copy(T1[3]); T1[7].add(Q[3]); // Q[0]+Q[1]+Q[2]+Q[3]
+        T1[0] = new ECP8(); T1[0].copy(Q[0]);
+        T1[1] = new ECP8(); T1[1].copy(T1[0]); T1[1].add(Q[1]);
+        T1[2] = new ECP8(); T1[2].copy(T1[0]); T1[2].add(Q[2]);
+        T1[3] = new ECP8(); T1[3].copy(T1[1]); T1[3].add(Q[2]);
+        T1[4] = new ECP8(); T1[4].copy(T1[0]); T1[4].add(Q[3]);
+        T1[5] = new ECP8(); T1[5].copy(T1[1]); T1[5].add(Q[3]);
+        T1[6] = new ECP8(); T1[6].copy(T1[2]); T1[6].add(Q[3]);
+        T1[7] = new ECP8(); T1[7].copy(T1[3]); T1[7].add(Q[3]);
 
         //  Use Frobenius
         for (i=0;i<8;i++) {

@@ -133,16 +133,14 @@ var PAIR192 = function(ctx) {
 
             x = new ctx.BIG(0);
             x.rcopy(ctx.ROM_CURVE.CURVE_Bnx);
-            n = new ctx.BIG(x); //n.copy(x);
+            n = new ctx.BIG(x);
 
             n3 = new ctx.BIG(n);
             n3.pmul(3);
             n3.norm();
 
-            //  P.affine();
-            //  Q.affine();
-            Qx = new ctx.FP(Q.getx()); //Qx.copy(Q.getx());
-            Qy = new ctx.FP(Q.gety()); //Qy.copy(Q.gety());
+            Qx = new ctx.FP(Q.getx());
+            Qy = new ctx.FP(Q.gety());
 
             A = new ctx.ECP4();
             r = new ctx.FP24(1);
@@ -187,16 +185,16 @@ var PAIR192 = function(ctx) {
             x = new ctx.BIG(0);
             x.rcopy(ctx.ROM_CURVE.CURVE_Bnx);
 
-            n = new ctx.BIG(x); //n.copy(x);
+            n = new ctx.BIG(x);
             n3 = new ctx.BIG(n);
             n3.pmul(3);
             n3.norm();
 
-            Qx = new ctx.FP(Q.getx()); //Qx.copy(Q.getx());
-            Qy = new ctx.FP(Q.gety()); //Qy.copy(Q.gety());
+            Qx = new ctx.FP(Q.getx());
+            Qy = new ctx.FP(Q.gety());
 
-            Sx = new ctx.FP(S.getx()); //Sx.copy(S.getx());
-            Sy = new ctx.FP(S.gety()); //Sy.copy(S.gety());
+            Sx = new ctx.FP(S.getx());
+            Sy = new ctx.FP(S.gety());
 
             A = new ctx.ECP4();
             B = new ctx.ECP4();
@@ -253,10 +251,10 @@ var PAIR192 = function(ctx) {
             x = new ctx.BIG(0);
             x.rcopy(ctx.ROM_CURVE.CURVE_Bnx);
 
-            r = new ctx.FP24(m); //r.copy(m);
+            r = new ctx.FP24(m);
 
             /* Easy part of final exp */
-            lv = new ctx.FP24(r); //lv.copy(r);
+            lv = new ctx.FP24(r);
             lv.inverse();
             r.conj();
             r.mul(lv);

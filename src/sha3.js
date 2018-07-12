@@ -107,7 +107,7 @@ var SHA3 = function(ctx) {
         },
 
         /* Initialise Hash function */
-        init: function(olen) { /* initialise */
+        init: function(olen) { /* initialize */
             var i, j;
             for (i = 0; i < 5; i++) {
                 this.S[i] = [];

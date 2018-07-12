@@ -75,7 +75,7 @@ var HASH384 = function(ctx) {
         },
 
         /* Initialise Hash function */
-        init: function() { /* initialise */
+        init: function() { /* initialize */
             var i;
 
             for (i = 0; i < 80; i++) {

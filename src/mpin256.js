@@ -38,13 +38,10 @@ var MPIN256 = function(ctx) {
         /* 200 for 4 digit PIN, 2000 for 6-digit PIN  - approx 2*sqrt(MAXPIN) */
         EFS: ctx.BIG.MODBYTES,
         EGS: ctx.BIG.MODBYTES,
-        //PAS: 16,
 
         SHA256: 32,
         SHA384: 48,
         SHA512: 64,
-
-        //HASH_TYPE: 32,
 
         /* return time in slots since epoch */
         today: function() {
@@ -424,10 +421,6 @@ var MPIN256 = function(ctx) {
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
             s = ctx.BIG.randomnum(r, rng);
-            //if (ROM.AES_S>0)
-            //{
-            //  s.mod2m(2*ROM.AES_S);
-            //}
             s.toBytes(S);
 
             return 0;
@@ -507,10 +500,6 @@ var MPIN256 = function(ctx) {
 
             if (rng != null) {
                 x = ctx.BIG.randomnum(r, rng);
-                //if (ROM.AES_S>0)
-                //{
-                //  x.mod2m(2*ROM.AES_S);
-                //}
                 x.toBytes(X);
             } else {
                 x = ctx.BIG.fromBytes(X);
@@ -558,10 +547,6 @@ var MPIN256 = function(ctx) {
             //  var q=new ctx.BIG(0); q.rcopy(ctx.ROM_FIELD.Modulus);
             if (rng !== null) {
                 x = ctx.BIG.randomnum(r, rng);
-                //if (ROM.AES_S>0)
-                //{
-                //  x.mod2m(2*ROM.AES_S);
-                //}
                 x.toBytes(X);
             } else {
                 x = ctx.BIG.fromBytes(X);
@@ -630,12 +615,10 @@ var MPIN256 = function(ctx) {
             py = ctx.BIG.fromBytes(Y);
             px.add(py);
             px.mod(r);
-            //  px.rsub(r);
 
             P = ctx.PAIR256.G1mul(P, px);
             P.neg();
             P.toBytes(SEC,false);
-            //ctx.PAIR256.G1mul(P,px).toBytes(SEC,false);
 
             return 0;
         },
@@ -648,13 +631,11 @@ var MPIN256 = function(ctx) {
 
             P.toBytes(HID,false);
             if (date !== 0) {
-                //if (HID!=null) P.toBytes(HID,false);
                 h = this.hashit(sha, date, h);
                 R = ctx.ECP.mapit(h);
                 P.add(R);
                 P.toBytes(HTID,false);
             }
-            //else P.toBytes(HID,false);
         },
 
         /* Implement step 1 of MPin protocol on server side. Pa is the client public key in case of DVS, otherwise must be set to null */
@@ -814,10 +795,6 @@ var MPIN256 = function(ctx) {
             q.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
             y.mod(q);
-            //if (ROM.AES_S>0)
-            //{
-            //  y.mod2m(2*ROM.AES_S);
-            //}
             y.toBytes(Y);
 
             return 0;
@@ -981,7 +958,6 @@ var MPIN256 = function(ctx) {
 
             r = new ctx.BIG(0);
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
-            //  var q=new ctx.BIG(0); q.rcopy(ctx.ROM_FIELD.Modulus);
 
             z.add(h);
             z.mod(r);

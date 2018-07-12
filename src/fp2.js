@@ -125,19 +125,16 @@ var FP2 = function(ctx) {
 
         /* negate this */
         neg: function() {
-            //      this.norm();
             var m = new ctx.FP(this.a),
                 t = new ctx.FP(0);
 
             m.add(this.b);
             m.neg();
-            //      m.norm();
             t.copy(m);
             t.add(this.b);
             this.b.copy(m);
             this.b.add(this.a);
             this.a.copy(t);
-            //this.norm();
         },
 
         /* conjugate this */
@@ -154,7 +151,7 @@ var FP2 = function(ctx) {
 
         /* this-=x */
         sub: function(x) {
-            var m = new FP2(x); //var m=new FP2(0); m.copy(x);
+            var m = new FP2(x);
             m.neg();
             this.add(m);
         },
@@ -178,15 +175,11 @@ var FP2 = function(ctx) {
 
         /* this*=this */
         sqr: function() {
-            //      this.norm();
-
             var w1 = new ctx.FP(this.a),
                 w3 = new ctx.FP(this.a),
                 mb = new ctx.FP(this.b);
 
-            //      w3.mul(this.b);
             w1.add(this.b);
-
 
             w3.add(this.a);
             w3.norm();
@@ -199,8 +192,6 @@ var FP2 = function(ctx) {
             w1.norm();
 
             this.a.mul(w1);
-            //      this.b.copy(w3); this.b.add(w3);
-            //      this.b.norm();
         },
 
         /* this*=y */
@@ -326,7 +317,7 @@ var FP2 = function(ctx) {
 
         /* this*=sqrt(-1) */
         times_i: function() {
-            var z = new ctx.FP(this.a); //z.copy(this.a);
+            var z = new ctx.FP(this.a);
             this.a.copy(this.b);
             this.a.neg();
             this.b.copy(z);
@@ -335,15 +326,13 @@ var FP2 = function(ctx) {
         /* w*=(1+sqrt(-1)) */
         /* where X*2-(1+sqrt(-1)) is irreducible for FP4, assumes p=3 mod 8 */
         mul_ip: function() {
-            //      this.norm();
-            var t = new FP2(this), // t.copy(this);
-                z = new ctx.FP(this.a); //z.copy(this.a);
+            var t = new FP2(this),
+                z = new ctx.FP(this.a);
 
             this.a.copy(this.b);
             this.a.neg();
             this.b.copy(z);
             this.add(t);
-            //      this.norm();
         },
 
         div_ip2: function() {
@@ -375,7 +364,7 @@ var FP2 = function(ctx) {
             this.norm();
 
             var r = new FP2(1),
-                x = new FP2(this), //x.copy(this);
+                x = new FP2(this),
                 bt;
 
             e.norm();

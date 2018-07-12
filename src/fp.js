@@ -180,7 +180,6 @@ var FP = function(ctx) {
             var s = false,
                 d, n;
 
-            //this.norm();
             if (c < 0) {
                 c = -c;
                 s = true;
@@ -200,21 +199,6 @@ var FP = function(ctx) {
                 }
             }
 
-            /*
-                    if (c<=ctx.BIG.NEXCESS && this.XES*c<=FP.FEXCESS)
-                    {
-                        this.f.imul(c);
-                        this.XES*=c;
-                        this.norm();
-                    }
-                    else
-                    {
-            //          var p=new ctx.BIG(0);
-            //          p.rcopy(ctx.ROM_FIELD.Modulus);
-                        var d=this.f.pxmul(c);
-                        this.f.copy(FP.mod(d));
-                    }
-            */
             if (s) {
                 this.neg();
                 this.norm();
@@ -229,7 +213,6 @@ var FP = function(ctx) {
             if (this.XES * this.XES > FP.FEXCESS) {
                 this.reduce();
             }
-            //if ((ea+1)>= Math.floor((FP.FEXCESS-1)/(ea+1))) this.reduce();
 
             d = ctx.BIG.sqr(this.f);
             t = FP.mod(d);
@@ -310,16 +293,6 @@ var FP = function(ctx) {
 
         /* this=1/this mod Modulus */
         inverse: function() {
-            /*
-            var p = new ctx.BIG(0),
-                r = this.redc();
-
-            p.rcopy(ctx.ROM_FIELD.Modulus);
-            r.invmodp(p);
-            this.f.copy(r);
-
-            return this.nres(); */
-
             var m2=new ctx.BIG(0);
 
             m2.rcopy(ctx.ROM_FIELD.Modulus);
@@ -375,36 +348,6 @@ var FP = function(ctx) {
             r.reduce();
             return r;
         },
-
-        /* return this^e mod Modulus
-        pow: function(e) {
-            var bt,
-                r = new FP(1),
-                m = new FP(0);
-
-            e.norm();
-            this.norm();
-            m.copy(this);
-
-            for (;;) {
-                bt = e.parity();
-                e.fshr(1);
-
-                if (bt == 1) {
-                    r.mul(m);
-                }
-
-                if (e.iszilch()) {
-                    break;
-                }
-
-                m.sqr();
-            }
-
-            r.reduce();
-
-            return r;
-        }, */
 
         /* return jacobi symbol (this/Modulus) */
         jacobi: function() {
@@ -470,13 +413,6 @@ var FP = function(ctx) {
         return r;
     };
 
-    /* calculate Field Excess
-    FP.EXCESS=function(a)
-    {
-        return ((a.w[ctx.BIG.NLEN-1]&FP.OMASK)>>(FP.MODBITS%ctx.BIG.BASEBITS))+1;
-    };
-    */
-
     /* reduce a ctx.DBIG to a ctx.BIG using a "special" modulus */
     FP.mod = function(d) {
         var b = new ctx.BIG(0),
@@ -498,7 +434,6 @@ var FP = function(ctx) {
             tw = t.w[ctx.BIG.NLEN - 1];
             t.w[ctx.BIG.NLEN - 1] &= FP.TMASK;
             t.inc(ctx.ROM_FIELD.MConst * ((tw >> FP.TBITS) + (v << (ctx.BIG.BASEBITS - FP.TBITS))));
-            //      b.add(t);
             t.norm();
 
             return t;
@@ -530,7 +465,6 @@ var FP = function(ctx) {
 
             b.add(tt);
             b.add(lo);
-            //b.norm();
             tt.shl(FP.MODBITS / 2);
             b.add(tt);
 

@@ -123,12 +123,11 @@ var FP8 = function(ctx) {
         /* this=-this */
         neg: function() {
             this.norm();
-            var m = new ctx.FP4(this.a), //m.copy(this.a);
+            var m = new ctx.FP4(this.a),
                 t = new ctx.FP4(0);
 
             m.add(this.b);
             m.neg();
-            //  m.norm();
             t.copy(m);
             t.add(this.b);
             this.b.copy(m);
@@ -157,7 +156,7 @@ var FP8 = function(ctx) {
 
         /* this-=x */
         sub: function(x) {
-            var m = new FP8(x); // m.copy(x);
+            var m = new FP8(x);
             m.neg();
             this.add(m);
         },
@@ -181,11 +180,9 @@ var FP8 = function(ctx) {
 
         /* this*=this */
         sqr: function() {
-            //      this.norm();
-
-            var t1 = new ctx.FP4(this.a), //t1.copy(this.a)
-                t2 = new ctx.FP4(this.b), //t2.copy(this.b)
-                t3 = new ctx.FP4(this.a); //t3.copy(this.a)
+            var t1 = new ctx.FP4(this.a),
+                t2 = new ctx.FP4(this.b),
+                t3 = new ctx.FP4(this.a);
 
             t3.mul(this.b);
             t1.add(this.b);
@@ -201,7 +198,6 @@ var FP8 = function(ctx) {
             t2.copy(t3);
             t2.times_i();
             t2.add(t3);
-            //t2.norm();  // ??
 
             t2.neg();
 
@@ -215,12 +211,10 @@ var FP8 = function(ctx) {
 
         /* this*=y */
         mul: function(y) {
-            //      this.norm();
-
-            var t1 = new ctx.FP4(this.a), //t1.copy(this.a)
-                t2 = new ctx.FP4(this.b), //t2.copy(this.b)
+            var t1 = new ctx.FP4(this.a),
+                t2 = new ctx.FP4(this.b),
                 t3 = new ctx.FP4(0),
-                t4 = new ctx.FP4(this.b); //t4.copy(this.b)
+                t4 = new ctx.FP4(this.b);
 
             t1.mul(y.a);
             t2.mul(y.b);
@@ -236,9 +230,6 @@ var FP8 = function(ctx) {
             t3.copy(t1);
             t3.neg();
             t4.add(t3);
-            //      t4.norm(); // ??
-
-            // t4.sub(t1);
 
             t3.copy(t2);
             t3.neg();
@@ -261,8 +252,8 @@ var FP8 = function(ctx) {
         inverse: function() {
             this.norm();
 
-            var t1 = new ctx.FP4(this.a), //t1.copy(this.a);
-                t2 = new ctx.FP4(this.b); // t2.copy(this.b);
+            var t1 = new ctx.FP4(this.a),
+                t2 = new ctx.FP4(this.b);
 
             t1.sqr();
             t2.sqr();
@@ -307,8 +298,8 @@ var FP8 = function(ctx) {
             this.norm();
             e.norm();
 
-            var w = new FP8(this), //w.copy(this);
-                z = new ctx.BIG(e), //z.copy(e);
+            var w = new FP8(this),
+                z = new ctx.BIG(e),
                 r = new FP8(1),
                 bt;
 
@@ -333,10 +324,9 @@ var FP8 = function(ctx) {
 
         /* XTR xtr_a function */
         xtr_A: function(w, y, z) {
-            var r = new FP8(w), //r.copy(w);
-                t = new FP8(w); //t.copy(w);
+            var r = new FP8(w),
+                t = new FP8(w);
 
-            //y.norm(); // ??
             r.sub(y);
             r.norm();
             r.pmul(this.a);
@@ -354,10 +344,10 @@ var FP8 = function(ctx) {
 
         /* XTR xtr_d function */
         xtr_D: function() {
-            var w = new FP8(this); //w.copy(this);
+            var w = new FP8(this);
             this.sqr();
             w.conj();
-            w.add(w); //w.norm(); // ??
+            w.add(w);
             this.sub(w);
             this.reduce();
         },
@@ -420,13 +410,13 @@ var FP8 = function(ctx) {
             a.norm();
             b.norm();
 
-            var e = new ctx.BIG(a), //e.copy(a)
-                d = new ctx.BIG(b), //d.copy(b)
+            var e = new ctx.BIG(a),
+                d = new ctx.BIG(b),
                 w = new ctx.BIG(0),
-                cu = new FP8(ck), //cu.copy(ck), // can probably be passed in w/o copying
-                cv = new FP8(this), //cv.copy(this),
-                cumv = new FP8(ckml), //cumv.copy(ckml),
-                cum2v = new FP8(ckm2l), //cum2v.copy(ckm2l),
+                cu = new FP8(ck),
+                cv = new FP8(this),
+                cumv = new FP8(ckml),
+                cum2v = new FP8(ckm2l),
                 r = new FP8(0),
                 t = new FP8(0),
                 f2 = 0,

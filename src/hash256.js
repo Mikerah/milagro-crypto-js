@@ -70,7 +70,7 @@ var HASH256 = function() {
         },
 
         /* Initialise Hash function */
-        init: function() { /* initialise */
+        init: function() { /* initialize */
             var i;
 
             for (i = 0; i < 64; i++) {

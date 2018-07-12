@@ -33,10 +33,6 @@ var ECP4 = function(ctx) {
     ECP4.prototype = {
         /* Test this=O? */
         is_infinity: function() {
-            // if (this.INF) {
-            //     return true;
-            // }
-
             this.x.reduce();
             this.y.reduce();
             this.z.reduce();
@@ -48,12 +44,10 @@ var ECP4 = function(ctx) {
             this.x.copy(P.x);
             this.y.copy(P.y);
             this.z.copy(P.z);
-            // this.INF = P.INF;
         },
 
         /* set this=O */
         inf: function() {
-            // this.INF = true;
             this.x.zero();
             this.y.one();
             this.z.zero();
@@ -64,9 +58,6 @@ var ECP4 = function(ctx) {
             this.x.cmove(Q.x, d);
             this.y.cmove(Q.y, d);
             this.z.cmove(Q.z, d);
-
-            // bd = (d !== 0) ? true : false;
-            // this.INF ^= (this.INF ^ Q.INF) & bd;
         },
 
         /* Constant time select from pre-computed table */
@@ -94,14 +85,6 @@ var ECP4 = function(ctx) {
         /* Test P == Q */
         equals: function(Q) {
             var a, b;
-
-            // if (this.is_infinity() && Q.is_infinity()) {
-            //    return true;
-            // }
-
-            // if (this.is_infinity() || Q.is_infinity()) {
-            //    return false;
-            // }
 
             a = new ctx.FP4(this.x);
             b = new ctx.FP4(Q.x);
@@ -244,18 +227,12 @@ var ECP4 = function(ctx) {
 
             rhs = ECP4.RHS(this.x);
 
-            y2 = new ctx.FP4(this.y); //y2.copy(this.y);
+            y2 = new ctx.FP4(this.y);
             y2.sqr();
 
             if (!y2.equals(rhs)) {
                 this.inf();
             }
-
-            // if (y2.equals(rhs)) {
-            //     this.INF = false;
-            // } else {
-            //     this.inf();
-            // }
         },
 
         /* set this=(x,.) */
@@ -269,7 +246,6 @@ var ECP4 = function(ctx) {
 
             if (rhs.sqrt()) {
                 this.y.copy(rhs);
-                // this.INF = false;
             } else {
                 this.inf();
             }
@@ -277,9 +253,6 @@ var ECP4 = function(ctx) {
 
         /* set this*=q, where q is Modulus, using Frobenius */
         frob: function(F,n) {
-            // if (this.INF) {
-            //    return;
-            // }
             for (var i=0;i<n;i++) {
                 this.x.frob(F[2]);
                 this.x.pmul(F[0]);
@@ -295,10 +268,6 @@ var ECP4 = function(ctx) {
         /* this+=this */
         dbl: function() {
             var iy, t0, t1, t2, x3, y3;
-
-            // if (this.INF) {
-            //    return -1;
-            // }
 
             iy = new ctx.FP4(this.y);
             if (ctx.ECP.SEXTIC_TWIST == ctx.ECP.D_TYPE) {
@@ -345,7 +314,7 @@ var ECP4 = function(ctx) {
             y3.mul(t0);
             y3.add(x3); //(y^2+3z*2)(y^2-9z^2)+3b.z^2.8y^2
             t1.copy(this.x);
-            t1.mul(iy); //
+            t1.mul(iy);
             this.x.copy(t0);
             this.x.norm();
             this.x.mul(t1);
@@ -361,15 +330,6 @@ var ECP4 = function(ctx) {
         /* this+=Q */
         add: function(Q) {
             var b, t0, t1, t2, t3, t4, x3, y3, z3;
-
-            // if (this.INF) {
-            //    this.copy(Q);
-            //    return -1;
-            // }
-
-            // if (Q.INF) {
-            //    return -1;
-            // }
 
             b = 3 * ctx.ROM_CURVE.CURVE_B_I;
             t0 = new ctx.FP4(this.x);
@@ -403,7 +363,7 @@ var ECP4 = function(ctx) {
             x3.norm(); //x3=Y2+Z2
 
             t4.mul(x3); //t4=(Y1+Z1)(Y2+Z2)
-            x3.copy(t1); //
+            x3.copy(t1);
             x3.add(t2); //X3=Y1.Y2+Z1.Z2
 
             t4.sub(x3);
@@ -608,7 +568,7 @@ var ECP4 = function(ctx) {
         rb = ctx.BIG.fromBytes(t);
         rb4=new ctx.FP2(ra,rb);
 
-        rx = new ctx.FP4(ra4, rb4); //rx.bset(ra,rb);
+        rx = new ctx.FP4(ra4, rb4);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = b[i + 4 * ctx.BIG.MODBYTES];
@@ -631,7 +591,7 @@ var ECP4 = function(ctx) {
         rb4=new ctx.FP2(ra,rb);
 
 
-        ry = new ctx.FP4(ra4, rb4); //ry.bset(ra,rb);
+        ry = new ctx.FP4(ra4, rb4);
 
         P = new ECP4();
         P.setxy(rx, ry);
@@ -644,12 +604,12 @@ var ECP4 = function(ctx) {
         var r, c, b;
 
         x.norm();
-        r = new ctx.FP4(x); //r.copy(x);
+        r = new ctx.FP4(x);
         r.sqr();
 
         c = new ctx.BIG(0);
         c.rcopy(ctx.ROM_CURVE.CURVE_B);
-        b = new ctx.FP4(c); //b.bseta(c);
+        b = new ctx.FP4(c);
 
         if (ctx.ECP.SEXTIC_TWIST == ctx.ECP.D_TYPE) {
             b.div_i();
@@ -688,14 +648,14 @@ var ECP4 = function(ctx) {
             Q[i].affine();
         }
 
-        T1[0] = new ECP4(); T1[0].copy(Q[0]); // Q[0]
-        T1[1] = new ECP4(); T1[1].copy(T1[0]); T1[1].add(Q[1]); // Q[0]+Q[1]
-        T1[2] = new ECP4(); T1[2].copy(T1[0]); T1[2].add(Q[2]); // Q[0]+Q[2]
-        T1[3] = new ECP4(); T1[3].copy(T1[1]); T1[3].add(Q[2]); // Q[0]+Q[1]+Q[2]
-        T1[4] = new ECP4(); T1[4].copy(T1[0]); T1[4].add(Q[3]); // Q[0]+Q[3]
-        T1[5] = new ECP4(); T1[5].copy(T1[1]); T1[5].add(Q[3]); // Q[0]+Q[1]+Q[3]
-        T1[6] = new ECP4(); T1[6].copy(T1[2]); T1[6].add(Q[3]); // Q[0]+Q[2]+Q[3]
-        T1[7] = new ECP4(); T1[7].copy(T1[3]); T1[7].add(Q[3]); // Q[0]+Q[1]+Q[2]+Q[3]
+        T1[0] = new ECP4(); T1[0].copy(Q[0]);
+        T1[1] = new ECP4(); T1[1].copy(T1[0]); T1[1].add(Q[1]);
+        T1[2] = new ECP4(); T1[2].copy(T1[0]); T1[2].add(Q[2]);
+        T1[3] = new ECP4(); T1[3].copy(T1[1]); T1[3].add(Q[2]);
+        T1[4] = new ECP4(); T1[4].copy(T1[0]); T1[4].add(Q[3]);
+        T1[5] = new ECP4(); T1[5].copy(T1[1]); T1[5].add(Q[3]);
+        T1[6] = new ECP4(); T1[6].copy(T1[2]); T1[6].add(Q[3]);
+        T1[7] = new ECP4(); T1[7].copy(T1[3]); T1[7].add(Q[3]);
 
         //  Use Frobenius
         for (i=0;i<8;i++) {

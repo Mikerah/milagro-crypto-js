@@ -27,13 +27,9 @@ var ECDH = function(ctx) {
         INVALID: -4,
         EFS: ctx.BIG.MODBYTES,
         EGS: ctx.BIG.MODBYTES,
-        //EAS: 16,
-        //EBS: 16,
         SHA256: 32,
         SHA384: 48,
         SHA512: 64,
-
-        //HASH_TYPE: 64,
 
         /* Convert Integer to n-byte array */
         inttobytes: function(n, len) {
@@ -61,7 +57,6 @@ var ECDH = function(ctx) {
 
             for (i = 0; i < len; i++) {
                 ch = b[i];
-                //s += String.fromCharCode(ch);
                 s += ((ch >>> 4) & 15).toString(16);
                 s += (ch & 15).toString(16);
             }
@@ -269,7 +264,6 @@ var ECDH = function(ctx) {
 
             K0 = new Array(b);
 
-            //b=K0.length;
             if (olen < 4) {
                 return 0;
             }
@@ -317,7 +311,6 @@ var ECDH = function(ctx) {
                 buff = [],
                 C = [],
                 fin, padlen, i, j, ipt, opt;
-            /*var clen=16+(Math.floor(M.length/16))*16;*/
 
             a.init(ctx.AES.CBC, K.length, K, null);
 
@@ -434,7 +427,6 @@ var ECDH = function(ctx) {
         KEY_PAIR_GENERATE: function(RNG, S, W) {
             var res = 0,
                 r, s, G, WP;
-            // var T=[];
 
             G = ctx.ECP.generator();
 
@@ -446,14 +438,7 @@ var ECDH = function(ctx) {
                 s.mod(r);
             } else {
                 s = ctx.BIG.randomnum(r, RNG);
-                // s.toBytes(T);
-                // for (var i=0;i<this.EGS;i++) S[i]=T[i];
             }
-
-            // if (ROM.AES_S>0)
-            // {
-            //  s.mod2m(2*ROM.AES_S);
-            // }
 
             s.toBytes(S);
 
@@ -555,10 +540,6 @@ var ECDH = function(ctx) {
             do {
                 u = ctx.BIG.randomnum(r, RNG);
                 w = ctx.BIG.randomnum(r, RNG);
-                // if (ROM.AES_S>0)
-                // {
-                //  u.mod2m(2*ROM.AES_S);
-                // }
                 V.copy(G);
                 V = V.mul(u);
                 vx = V.getX();

@@ -151,9 +151,9 @@ var FP24 = function(ctx) {
 
         /* Granger-Scott Unitary Squaring */
         usqr: function() {
-            var A = new ctx.FP8(this.a), //A.copy(this.a)
-                B = new ctx.FP8(this.c), //B.copy(this.c)
-                C = new ctx.FP8(this.b), //C.copy(this.b)
+            var A = new ctx.FP8(this.a),
+                B = new ctx.FP8(this.c),
+                C = new ctx.FP8(this.b),
                 D = new ctx.FP8(0);
 
             this.a.sqr();
@@ -189,14 +189,14 @@ var FP24 = function(ctx) {
 
         /* Chung-Hasan SQR2 method from http://cacr.uwaterloo.ca/techreports/2006/cacr2006-24.pdf */
         sqr: function() {
-            var A = new ctx.FP8(this.a), //A.copy(this.a)
-                B = new ctx.FP8(this.b), //B.copy(this.b)
-                C = new ctx.FP8(this.c), //C.copy(this.c)
-                D = new ctx.FP8(this.a); //D.copy(this.a)
+            var A = new ctx.FP8(this.a),
+                B = new ctx.FP8(this.b),
+                C = new ctx.FP8(this.c),
+                D = new ctx.FP8(this.a);
 
             A.sqr();
             B.mul(this.c);
-            B.add(B); //B.norm();
+            B.add(B);
             C.sqr();
             D.mul(this.b);
             D.add(D);
@@ -225,12 +225,12 @@ var FP24 = function(ctx) {
 
         /* FP24 full multiplication this=this*y */
         mul: function(y) {
-            var z0 = new ctx.FP8(this.a), //z0.copy(this.a)
+            var z0 = new ctx.FP8(this.a),
                 z1 = new ctx.FP8(0),
-                z2 = new ctx.FP8(this.b), //z2.copy(this.b)
+                z2 = new ctx.FP8(this.b),
                 z3 = new ctx.FP8(0),
-                t0 = new ctx.FP8(this.a), //t0.copy(this.a)
-                t1 = new ctx.FP8(y.a); //t1.copy(y.a)
+                t0 = new ctx.FP8(this.a),
+                t1 = new ctx.FP8(y.a);
 
             z0.mul(y.a);
             z2.mul(y.b);
@@ -287,7 +287,6 @@ var FP24 = function(ctx) {
             z3.add(t1);
             t0.times_i();
             this.b.add(t0);
-            // z3.norm();
             z3.times_i();
             this.a.copy(z0);
             this.a.add(z3);
@@ -300,11 +299,11 @@ var FP24 = function(ctx) {
             var z0, z1, z2, z3, t0, t1;
 
             if (twist == ctx.ECP.D_TYPE) {
-                z0 = new ctx.FP8(this.a); //z0.copy(this.a);
-                z2 = new ctx.FP8(this.b); //z2.copy(this.b);
-                z3 = new ctx.FP8(this.b); //z3.copy(this.b);
+                z0 = new ctx.FP8(this.a);
+                z2 = new ctx.FP8(this.b);
+                z3 = new ctx.FP8(this.b);
                 t0 = new ctx.FP8(0);
-                t1 = new ctx.FP8(y.a); //t1.copy(y.a);
+                t1 = new ctx.FP8(y.a);
 
                 z0.mul(y.a);
                 z2.pmul(y.b.real());
@@ -358,7 +357,7 @@ var FP24 = function(ctx) {
                 t0.copy(this.b); t0.add(this.c);
                 t0.norm();
 
-                z3.copy(t0); //z3.mul(y.c);
+                z3.copy(t0);
                 z3.pmul(y.c.getb());
                 z3.times_i();
 
@@ -398,9 +397,9 @@ var FP24 = function(ctx) {
 
         /* this=1/this */
         inverse: function() {
-            var f0 = new ctx.FP8(this.a), //f0.copy(this.a)
-                f1 = new ctx.FP8(this.b), //f1.copy(this.b)
-                f2 = new ctx.FP8(this.a), //f2.copy(this.a)
+            var f0 = new ctx.FP8(this.a),
+                f1 = new ctx.FP8(this.b),
+                f2 = new ctx.FP8(this.a),
                 f3 = new ctx.FP8(0);
 
             f0.sqr();
@@ -598,7 +597,7 @@ var FP24 = function(ctx) {
             e3.pmul(3);
             e3.norm();
 
-            w = new FP24(this); //w.copy(this);
+            w = new FP24(this);
             nb = e3.nbits();
 
             for (i = nb - 2; i >= 1; i--) {
@@ -696,7 +695,7 @@ var FP24 = function(ctx) {
             t[i] = w[i + ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 2 * ctx.BIG.MODBYTES];
@@ -706,9 +705,9 @@ var FP24 = function(ctx) {
             t[i] = w[i + 3 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        d = new ctx.FP2(a, b); //d.bset(a,b);
+        d = new ctx.FP2(a, b);
 
-        ea = new ctx.FP4(c, d); //e.set(c,d);
+        ea = new ctx.FP4(c, d);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 4 * ctx.BIG.MODBYTES];
@@ -718,7 +717,7 @@ var FP24 = function(ctx) {
             t[i] = w[i + 5 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 6 * ctx.BIG.MODBYTES];
@@ -728,9 +727,9 @@ var FP24 = function(ctx) {
             t[i] = w[i + 7 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        d = new ctx.FP2(a, b); //d.bset(a,b);
+        d = new ctx.FP2(a, b);
 
-        eb = new ctx.FP4(c, d); //e.set(c,d);
+        eb = new ctx.FP4(c, d);
 
         e = new ctx.FP8(ea,eb);
 
@@ -742,7 +741,7 @@ var FP24 = function(ctx) {
             t[i] = w[i + 9 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 10 * ctx.BIG.MODBYTES];
@@ -754,7 +753,7 @@ var FP24 = function(ctx) {
         b = ctx.BIG.fromBytes(t);
         d = new ctx.FP2(a, b);
 
-        ea = new ctx.FP4(c, d); //e.set(c,d);
+        ea = new ctx.FP4(c, d);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 12 * ctx.BIG.MODBYTES];
@@ -764,7 +763,7 @@ var FP24 = function(ctx) {
             t[i] = w[i + 13 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 14 * ctx.BIG.MODBYTES];
@@ -776,9 +775,9 @@ var FP24 = function(ctx) {
         b = ctx.BIG.fromBytes(t);
         d = new ctx.FP2(a, b);
 
-        eb = new ctx.FP4(c, d); //e.set(c,d);
+        eb = new ctx.FP4(c, d);
 
-        f = new ctx.FP8(ea, eb); //f.set(c,d);
+        f = new ctx.FP8(ea, eb);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 16 * ctx.BIG.MODBYTES];
@@ -788,7 +787,7 @@ var FP24 = function(ctx) {
             t[i] = w[i + 17 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 18 * ctx.BIG.MODBYTES];
@@ -798,9 +797,9 @@ var FP24 = function(ctx) {
             t[i] = w[i + 19 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        d = new ctx.FP2(a, b); //d.bset(a,b);
+        d = new ctx.FP2(a, b);
 
-        ea = new ctx.FP4(c, d); //e.set(c,d);
+        ea = new ctx.FP4(c, d);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 20 * ctx.BIG.MODBYTES];
@@ -810,7 +809,7 @@ var FP24 = function(ctx) {
             t[i] = w[i + 21 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 22 * ctx.BIG.MODBYTES];
@@ -820,13 +819,13 @@ var FP24 = function(ctx) {
             t[i] = w[i + 23 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        d = new ctx.FP2(a, b); //d.bset(a,b);
+        d = new ctx.FP2(a, b);
 
-        eb = new ctx.FP4(c, d); //e.set(c,d);
+        eb = new ctx.FP4(c, d);
 
-        g = new ctx.FP8(ea, eb); //g.set(c,d);
+        g = new ctx.FP8(ea, eb);
 
-        r = new FP24(e, f, g); //r.set(e,f,g);
+        r = new FP24(e, f, g);
 
         return r;
     };
@@ -861,14 +860,14 @@ var FP24 = function(ctx) {
             t[i] = new ctx.BIG(u[i]); t[i].norm();
         }
 
-        g1[0] = new FP24(q[0]);  // q[0]
-        g1[1] = new FP24(g1[0]); g1[1].mul(q[1]);   // q[0].q[1]
-        g1[2] = new FP24(g1[0]); g1[2].mul(q[2]);   // q[0].q[2]
-        g1[3] = new FP24(g1[1]); g1[3].mul(q[2]);   // q[0].q[1].q[2]
-        g1[4] = new FP24(q[0]);  g1[4].mul(q[3]);   // q[0].q[3]
-        g1[5] = new FP24(g1[1]); g1[5].mul(q[3]);   // q[0].q[1].q[3]
-        g1[6] = new FP24(g1[2]); g1[6].mul(q[3]);   // q[0].q[2].q[3]
-        g1[7] = new FP24(g1[3]); g1[7].mul(q[3]);   // q[0].q[1].q[2].q[3]
+        g1[0] = new FP24(q[0]);
+        g1[1] = new FP24(g1[0]); g1[1].mul(q[1]);
+        g1[2] = new FP24(g1[0]); g1[2].mul(q[2]);
+        g1[3] = new FP24(g1[1]); g1[3].mul(q[2]);
+        g1[4] = new FP24(q[0]);  g1[4].mul(q[3]);
+        g1[5] = new FP24(g1[1]); g1[5].mul(q[3]);
+        g1[6] = new FP24(g1[2]); g1[6].mul(q[3]);
+        g1[7] = new FP24(g1[3]); g1[7].mul(q[3]);
 
         //  Use Frobenius
         fa.rcopy(ctx.ROM_FIELD.Fra);

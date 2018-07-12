@@ -38,13 +38,10 @@ var MPIN = function(ctx) {
         /* 200 for 4 digit PIN, 2000 for 6-digit PIN  - approx 2*sqrt(MAXPIN) */
         EFS: ctx.BIG.MODBYTES,
         EGS: ctx.BIG.MODBYTES,
-        //PAS: 16,
 
         SHA256: 32,
         SHA384: 48,
         SHA512: 64,
-
-        //HASH_TYPE: 32,
 
         /* return time in slots since epoch */
         today: function() {
@@ -226,7 +223,7 @@ var MPIN = function(ctx) {
                 u.dec(1);
                 u.norm();
                 r++;
-                R.setxi(u, s); //=new ECP(u,s);
+                R.setxi(u, s);
                 if (!R.is_infinity()) {
                     break;
                 }
@@ -372,10 +369,6 @@ var MPIN = function(ctx) {
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
             s = ctx.BIG.randomnum(r, rng);
-            //if (ROM.AES_S>0)
-            //{
-            //  s.mod2m(2*ROM.AES_S);
-            //}
             s.toBytes(S);
 
             return 0;
@@ -455,10 +448,6 @@ var MPIN = function(ctx) {
 
             if (rng != null) {
                 x = ctx.BIG.randomnum(r, rng);
-                //if (ROM.AES_S>0)
-                //{
-                //  x.mod2m(2*ROM.AES_S);
-                //}
                 x.toBytes(X);
             } else {
                 x = ctx.BIG.fromBytes(X);
@@ -506,10 +495,6 @@ var MPIN = function(ctx) {
             //  var q=new ctx.BIG(0); q.rcopy(ctx.ROM_FIELD.Modulus);
             if (rng !== null) {
                 x = ctx.BIG.randomnum(r, rng);
-                //if (ROM.AES_S>0)
-                //{
-                //  x.mod2m(2*ROM.AES_S);
-                //}
                 x.toBytes(X);
             } else {
                 x = ctx.BIG.fromBytes(X);
@@ -578,12 +563,10 @@ var MPIN = function(ctx) {
             py = ctx.BIG.fromBytes(Y);
             px.add(py);
             px.mod(r);
-            //  px.rsub(r);
 
             P = ctx.PAIR.G1mul(P, px);
             P.neg();
             P.toBytes(SEC,false);
-            //ctx.PAIR.G1mul(P,px).toBytes(SEC,false);
 
             return 0;
         },
@@ -596,13 +579,11 @@ var MPIN = function(ctx) {
 
             P.toBytes(HID,false);
             if (date !== 0) {
-                //if (HID!=null) P.toBytes(HID,false);
                 h = this.hashit(sha, date, h);
                 R = ctx.ECP.mapit(h);
                 P.add(R);
                 P.toBytes(HTID,false);
             }
-            //else P.toBytes(HID,false);
         },
 
         /* Implement step 1 of MPin protocol on server side. Pa is the client public key in case of DVS, otherwise must be set to null */
@@ -762,10 +743,6 @@ var MPIN = function(ctx) {
             q.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
             y.mod(q);
-            //if (ROM.AES_S>0)
-            //{
-            //  y.mod2m(2*ROM.AES_S);
-            //}
             y.toBytes(Y);
 
             return 0;
@@ -927,13 +904,8 @@ var MPIN = function(ctx) {
 
             W = ctx.PAIR.G1mul(W, x);
 
-            //  var fa=new ctx.BIG(0); fa.rcopy(ctx.ROM_FIELD.Fra);
-            //  var fb=new ctx.BIG(0); fb.rcopy(ctx.ROM_FIELD.Frb);
-            //  var f=new ctx.FP2(fa,fb); //f.bset(fa,fb);
-
             r = new ctx.BIG(0);
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
-            //  var q=new ctx.BIG(0); q.rcopy(ctx.ROM_FIELD.Modulus);
 
             z.add(h);
             z.mod(r);
@@ -942,27 +914,6 @@ var MPIN = function(ctx) {
             g1.mul(g2);
 
             c = g1.compow(z, r);
-            // var m=new ctx.BIG(q);
-            // m.mod(r);
-
-            // var a=new ctx.BIG(z);
-            // a.mod(m);
-
-            // var b=new ctx.BIG(z);
-            // b.div(m);
-
-
-            // var c=g1.trace();
-            // g2.copy(g1);
-            // g2.frob(f);
-            // var cp=g2.trace();
-            // g1.conj();
-            // g2.mul(g1);
-            // var cpm1=g2.trace();
-            // g2.mul(g1);
-            // var cpm2=g2.trace();
-
-            // c=c.xtr_pow2(cp,cpm1,cpm2,a,b);
 
             t = this.mpin_hash(sha, c, W);
 
