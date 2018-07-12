@@ -77,7 +77,7 @@ var ECDH = function(ctx) {
 
         hashit: function(sha, A, n, B, pad) {
             var R = [],
-                H, W, i, len;
+                H, W, i;
 
             if (sha == this.SHA256) {
                 H = new ctx.HASH256();
@@ -105,18 +105,16 @@ var ECDH = function(ctx) {
 
             W = [];
 
-            len = ctx.BIG.MODBYTES;
-
-            if (sha >= len) {
-                for (i = 0; i < len; i++) {
+            if (sha >= pad) {
+                for (i = 0; i < pad; i++) {
                     W[i] = R[i];
                 }
             } else {
                 for (i = 0; i < sha; i++) {
-                    W[i + len - sha] = R[i];
+                    W[i + pad - sha] = R[i];
                 }
 
-                for (i = 0; i < len - sha; i++) {
+                for (i = 0; i < pad - sha; i++) {
                     W[i] = 0;
                 }
             }
