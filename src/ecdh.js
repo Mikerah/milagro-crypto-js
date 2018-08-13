@@ -480,14 +480,7 @@ var ECDH = function(ctx) {
                 s.mod(r);
             } else {
                 s = ctx.BIG.randomnum(r, RNG);
-                // s.toBytes(T);
-                // for (var i=0;i<this.EGS;i++) S[i]=T[i];
             }
-
-            //if (ROM.AES_S>0)
-            //{
-            //  s.mod2m(2*ROM.AES_S);
-            //}
 
             s.toBytes(S);
 
@@ -594,10 +587,6 @@ var ECDH = function(ctx) {
             do {
                 u = ctx.BIG.randomnum(r, RNG);
                 w = ctx.BIG.randomnum(r, RNG);
-                //if (ROM.AES_S>0)
-                //{
-                //  u.mod2m(2*ROM.AES_S);
-                //}
                 V.copy(G);
                 V = V.mul(u);
                 vx = V.getX();
@@ -801,5 +790,7 @@ var ECDH = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.ECDH = ECDH;
+    module.exports = {
+        ECDH: ECDH
+    };
 }

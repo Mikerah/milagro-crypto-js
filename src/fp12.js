@@ -121,9 +121,9 @@ var FP12 = function(ctx) {
 
         /* Granger-Scott Unitary Squaring */
         usqr: function() {
-            var A = new ctx.FP4(this.a), //A.copy(this.a)
-                B = new ctx.FP4(this.c), //B.copy(this.c)
-                C = new ctx.FP4(this.b), //C.copy(this.b)
+            var A = new ctx.FP4(this.a),
+                B = new ctx.FP4(this.c),
+                C = new ctx.FP4(this.b),
                 D = new ctx.FP4(0);
 
             this.a.sqr();
@@ -159,14 +159,14 @@ var FP12 = function(ctx) {
 
         /* Chung-Hasan SQR2 method from http://cacr.uwaterloo.ca/techreports/2006/cacr2006-24.pdf */
         sqr: function() {
-            var A = new ctx.FP4(this.a), //A.copy(this.a)
-                B = new ctx.FP4(this.b), //B.copy(this.b)
-                C = new ctx.FP4(this.c), //C.copy(this.c)
-                D = new ctx.FP4(this.a); //D.copy(this.a)
+            var A = new ctx.FP4(this.a),
+                B = new ctx.FP4(this.b),
+                C = new ctx.FP4(this.c),
+                D = new ctx.FP4(this.a);
 
             A.sqr();
             B.mul(this.c);
-            B.add(B); //B.norm();
+            B.add(B);
             C.sqr();
             D.mul(this.b);
             D.add(D);
@@ -195,12 +195,12 @@ var FP12 = function(ctx) {
 
         /* FP12 full multiplication this=this*y */
         mul: function(y) {
-            var z0 = new ctx.FP4(this.a), //z0.copy(this.a)
+            var z0 = new ctx.FP4(this.a),
                 z1 = new ctx.FP4(0),
-                z2 = new ctx.FP4(this.b), //z2.copy(this.b)
+                z2 = new ctx.FP4(this.b),
                 z3 = new ctx.FP4(0),
-                t0 = new ctx.FP4(this.a), //t0.copy(this.a)
-                t1 = new ctx.FP4(y.a); //t1.copy(y.a)
+                t0 = new ctx.FP4(this.a),
+                t1 = new ctx.FP4(y.a);
 
             z0.mul(y.a);
             z2.mul(y.b);
@@ -257,7 +257,6 @@ var FP12 = function(ctx) {
             z3.add(t1);
             t0.times_i();
             this.b.add(t0);
-            // z3.norm();
             z3.times_i();
             this.a.copy(z0);
             this.a.add(z3);
@@ -267,14 +266,15 @@ var FP12 = function(ctx) {
 
         /* Special case this*=y that arises from special form of ATE pairing line function */
         smul: function(y, twist) {
-            var z0,z1,z2,z3,t0,t1;
+            var z0, z1, z2, z3, t0, t1;
 
             if (twist == ctx.ECP.D_TYPE) {
-                z0 = new ctx.FP4(this.a), //z0.copy(this.a);
-                z2 = new ctx.FP4(this.b), //z2.copy(this.b);
-                z3 = new ctx.FP4(this.b), //z3.copy(this.b);
-                t0 = new ctx.FP4(0),
-                t1 = new ctx.FP4(y.a); //t1.copy(y.a);
+
+                z0 = new ctx.FP4(this.a);
+                z2 = new ctx.FP4(this.b);
+                z3 = new ctx.FP4(this.b);
+                t0 = new ctx.FP4(0);
+                t1 = new ctx.FP4(y.a);
 
                 z0.mul(y.a);
                 z2.pmul(y.b.real());
@@ -313,11 +313,11 @@ var FP12 = function(ctx) {
             }
 
             if (twist == ctx.ECP.M_TYPE) {
-                z0=new ctx.FP4(this.a),
-                z1=new ctx.FP4(0),
-                z2=new ctx.FP4(0),
-                z3=new ctx.FP4(0),
-                t0=new ctx.FP4(this.a),
+                z0=new ctx.FP4(this.a);
+                z1=new ctx.FP4(0);
+                z2=new ctx.FP4(0);
+                z3=new ctx.FP4(0);
+                t0=new ctx.FP4(this.a);
                 t1=new ctx.FP4(0);
 
                 z0.mul(y.a);
@@ -328,7 +328,7 @@ var FP12 = function(ctx) {
                 t0.copy(this.b); t0.add(this.c);
                 t0.norm();
 
-                z3.copy(t0); //z3.mul(y.c);
+                z3.copy(t0);
                 z3.pmul(y.c.getb());
                 z3.times_i();
 
@@ -368,9 +368,9 @@ var FP12 = function(ctx) {
 
         /* this=1/this */
         inverse: function() {
-            var f0 = new ctx.FP4(this.a), //f0.copy(this.a)
-                f1 = new ctx.FP4(this.b), //f1.copy(this.b)
-                f2 = new ctx.FP4(this.a), //f2.copy(this.a)
+            var f0 = new ctx.FP4(this.a),
+                f1 = new ctx.FP4(this.b),
+                f2 = new ctx.FP4(this.a),
                 f3 = new ctx.FP4(0);
 
             f0.sqr();
@@ -512,7 +512,7 @@ var FP12 = function(ctx) {
             e3.pmul(3);
             e3.norm();
 
-            w = new FP12(this); //w.copy(this);
+            w = new FP12(this);
             nb = e3.nbits();
 
             for (i = nb - 2; i >= 1; i--) {
@@ -610,7 +610,7 @@ var FP12 = function(ctx) {
             t[i] = w[i + ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 2 * ctx.BIG.MODBYTES];
@@ -620,9 +620,9 @@ var FP12 = function(ctx) {
             t[i] = w[i + 3 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        d = new ctx.FP2(a, b); //d.bset(a,b);
+        d = new ctx.FP2(a, b);
 
-        e = new ctx.FP4(c, d); //e.set(c,d);
+        e = new ctx.FP4(c, d);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 4 * ctx.BIG.MODBYTES];
@@ -632,7 +632,7 @@ var FP12 = function(ctx) {
             t[i] = w[i + 5 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 6 * ctx.BIG.MODBYTES];
@@ -644,7 +644,7 @@ var FP12 = function(ctx) {
         b = ctx.BIG.fromBytes(t);
         d = new ctx.FP2(a, b);
 
-        f = new ctx.FP4(c, d); //f.set(c,d);
+        f = new ctx.FP4(c, d);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 8 * ctx.BIG.MODBYTES];
@@ -654,7 +654,7 @@ var FP12 = function(ctx) {
             t[i] = w[i + 9 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 10 * ctx.BIG.MODBYTES];
@@ -664,11 +664,11 @@ var FP12 = function(ctx) {
             t[i] = w[i + 11 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        d = new ctx.FP2(a, b); //d.bset(a,b);
+        d = new ctx.FP2(a, b);
 
-        g = new ctx.FP4(c, d); //g.set(c,d);
+        g = new ctx.FP4(c, d);
 
-        r = new FP12(e, f, g); //r.set(e,f,g);
+        r = new FP12(e, f, g);
 
         return r;
     };
@@ -773,5 +773,7 @@ var FP12 = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.FP12 = FP12;
+    module.exports = {
+        FP12: FP12
+    };
 }

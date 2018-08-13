@@ -145,7 +145,7 @@ var PAIR = function(ctx) {
 
             x = new ctx.BIG(0);
             x.rcopy(ctx.ROM_CURVE.CURVE_Bnx);
-            n = new ctx.BIG(x); //n.copy(x);
+            n = new ctx.BIG(x);
             K = new ctx.ECP2();
 
             if (ctx.ECP.CURVE_PAIRING_TYPE == ctx.ECP.BN) {
@@ -164,10 +164,8 @@ var PAIR = function(ctx) {
             n3.pmul(3);
             n3.norm();
 
-            //  P.affine();
-            //  Q.affine();
-            Qx = new ctx.FP(Q.getx()); //Qx.copy(Q.getx());
-            Qy = new ctx.FP(Q.gety()); //Qy.copy(Q.gety());
+            Qx = new ctx.FP(Q.getx());
+            Qy = new ctx.FP(Q.gety());
 
             A = new ctx.ECP2();
             r = new ctx.FP12(1);
@@ -236,7 +234,7 @@ var PAIR = function(ctx) {
             x = new ctx.BIG(0);
             x.rcopy(ctx.ROM_CURVE.CURVE_Bnx);
 
-            n = new ctx.BIG(x); //n.copy(x);
+            n = new ctx.BIG(x);
             K = new ctx.ECP2();
 
             if (ctx.ECP.CURVE_PAIRING_TYPE == ctx.ECP.BN) {
@@ -255,11 +253,11 @@ var PAIR = function(ctx) {
             n3.pmul(3);
             n3.norm();
 
-            Qx = new ctx.FP(Q.getx()); //Qx.copy(Q.getx());
-            Qy = new ctx.FP(Q.gety()); //Qy.copy(Q.gety());
+            Qx = new ctx.FP(Q.getx());
+            Qy = new ctx.FP(Q.gety());
 
-            Sx = new ctx.FP(S.getx()); //Sx.copy(S.getx());
-            Sy = new ctx.FP(S.gety()); //Sy.copy(S.gety());
+            Sx = new ctx.FP(S.getx());
+            Sy = new ctx.FP(S.gety());
 
             A = new ctx.ECP2();
             B = new ctx.ECP2();
@@ -341,10 +339,10 @@ var PAIR = function(ctx) {
             x = new ctx.BIG(0);
             x.rcopy(ctx.ROM_CURVE.CURVE_Bnx);
 
-            r = new ctx.FP12(m); //r.copy(m);
+            r = new ctx.FP12(m);
 
             /* Easy part of final exp */
-            lv = new ctx.FP12(r); //lv.copy(r);
+            lv = new ctx.FP12(r);
             lv.inverse();
             r.conj();
             r.mul(lv);
@@ -357,12 +355,12 @@ var PAIR = function(ctx) {
             if (ctx.ECP.CURVE_PAIRING_TYPE == ctx.ECP.BN) {
                 lv.copy(r);
                 lv.frob(f);
-                x0 = new ctx.FP12(lv); //x0.copy(lv);
+                x0 = new ctx.FP12(lv);
                 x0.frob(f);
                 lv.mul(r);
                 x0.mul(lv);
                 x0.frob(f);
-                x1 = new ctx.FP12(r); //x1.copy(r);
+                x1 = new ctx.FP12(r);
                 x1.conj();
 
                 x4 = r.pow(x);
@@ -370,13 +368,13 @@ var PAIR = function(ctx) {
                     x4.conj();
                 }
 
-                x3 = new ctx.FP12(x4); //x3.copy(x4);
+                x3 = new ctx.FP12(x4);
                 x3.frob(f);
                 x2 = x4.pow(x);
                 if (ctx.ECP.SIGN_OF_X == ctx.ECP.POSITIVEX) {
                     x2.conj();
                 }
-                x5 = new ctx.FP12(x2); /*x5.copy(x2);*/
+                x5 = new ctx.FP12(x2);
                 x5.conj();
                 lv = x2.pow(x);
                 if (ctx.ECP.SIGN_OF_X == ctx.ECP.POSITIVEX) {
@@ -622,7 +620,7 @@ var PAIR = function(ctx) {
             fa.rcopy(ctx.ROM_FIELD.Fra);
             fb = new ctx.BIG(0);
             fb.rcopy(ctx.ROM_FIELD.Frb);
-            f = new ctx.FP2(fa, fb); //f.bset(fa,fb);
+            f = new ctx.FP2(fa, fb);
 
             if (ctx.ECP.SEXTIC_TWIST == ctx.ECP.M_TYPE) {
                 f.inverse();
@@ -705,39 +703,11 @@ var PAIR = function(ctx) {
         return r;
     };
 
-    /* test group membership - no longer needed */
-    /* with GT-Strong curve, now only check that m!=1, conj(m)*m==1, and m.m^{p^4}=m^{p^2} */
-    /*
-    PAIR.GTmember= function(m)
-    {
-        if (m.isunity()) return false;
-        var r=new ctx.FP12(m);
-        r.conj();
-        r.mul(m);
-        if (!r.isunity()) return false;
-
-        var fa=new ctx.BIG(0); fa.rcopy(ctx.ROM_FIELD.Fra);
-        var fb=new ctx.BIG(0); fb.rcopy(ctx.ROM_FIELD.Frb);
-        var f=new ctx.FP2(fa,fb); //f.bset(fa,fb);
-
-        r.copy(m); r.frob(f); r.frob(f);
-        var w=new ctx.FP12(r); w.frob(f); w.frob(f);
-        w.mul(m);
-        if (!ctx.ROM_CURVE.GT_STRONG)
-        {
-            if (!w.equals(r)) return false;
-            var x=new ctx.BIG(0); x.rcopy(ctx.ROM_CURVE.CURVE_Bnx);
-            r.copy(m); w=r.pow(x); w=w.pow(x);
-            r.copy(w); r.sqr(); r.mul(w); r.sqr();
-            w.copy(m); w.frob(f);
-        }
-        return w.equals(r);
-    };
-    */
-
     return PAIR;
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.PAIR = PAIR;
+    module.exports = {
+        PAIR: PAIR
+    };
 }

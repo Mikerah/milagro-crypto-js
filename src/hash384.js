@@ -28,6 +28,7 @@ var HASH384 = function(ctx) {
     };
 
     HASH384.prototype = {
+
         transform: function() { /* basic transformation step */
             var a, b, c, d, e, f, g, hh, t1, t2, j;
 
@@ -74,7 +75,7 @@ var HASH384 = function(ctx) {
         },
 
         /* Initialise Hash function */
-        init: function() { /* initialise */
+        init: function() { /* initialize */
             var i;
 
             for (i = 0; i < 80; i++) {
@@ -275,5 +276,7 @@ var HASH384 = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.HASH384 = HASH384;
+    module.exports = {
+        HASH384: HASH384
+    };
 }

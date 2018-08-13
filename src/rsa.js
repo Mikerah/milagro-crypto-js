@@ -18,7 +18,6 @@
 */
 
 /* RSA API Functions */
-
 var RSA,
     rsa_private_key,
     rsa_public_key;
@@ -518,7 +517,7 @@ rsa_public_key = function(ctx) {
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
     module.exports = {
         RSA: RSA,
-        rsa_public_key: rsa_public_key,
-        rsa_private_key: rsa_private_key
+        rsa_private_key: rsa_private_key,
+        rsa_public_key: rsa_public_key
     };
 }

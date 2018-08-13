@@ -75,7 +75,7 @@ var HASH512 = function(ctx) {
         },
 
         /* Initialise Hash function */
-        init: function() { /* initialise */
+        init: function() { /* initialize */
             var i;
 
             for (i = 0; i < 80; i++) {
@@ -277,5 +277,7 @@ var HASH512 = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.HASH512 = HASH512;
+    module.exports = {
+        HASH512: HASH512
+    };
 }

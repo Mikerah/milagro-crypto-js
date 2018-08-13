@@ -405,7 +405,6 @@ var CTX = function(input_parameter) {
     prepareModule("HASH512");
     prepareModule("SHA3");
     prepareModule("RAND");
-    prepareModule("NewHope");
     prepareModule("NHS");
 
     if (typeof input_parameter === "undefined") {
@@ -414,6 +413,7 @@ var CTX = function(input_parameter) {
 
     ctx.config = CTXLIST[input_parameter];
 
+    // Set BIG parameters
     prepareModule("BIG");
     prepareModule("DBIG", "big");
 

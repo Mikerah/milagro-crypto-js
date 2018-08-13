@@ -107,7 +107,7 @@ var SHA3 = function(ctx) {
         },
 
         /* Initialise Hash function */
-        init: function(olen) { /* initialise */
+        init: function(olen) { /* initialize */
             var i, j;
             for (i = 0; i < 5; i++) {
                 this.S[i] = [];
@@ -264,5 +264,7 @@ var SHA3 = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.SHA3 = SHA3;
+    module.exports = {
+        SHA3: SHA3
+    };
 }

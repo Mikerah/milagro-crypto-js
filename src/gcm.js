@@ -174,7 +174,7 @@ var GCM = function(ctx) {
                 this.a.f[12] = b[0];
                 this.a.f[13] = b[1];
                 this.a.f[14] = b[2];
-                this.a.f[15] = b[3]; /* initialise IV */
+                this.a.f[15] = b[3]; /* initialize IV */
 
                 for (i = 0; i < 16; i++) {
                     this.Y_0[i] = this.a.f[i];
@@ -428,5 +428,7 @@ var GCM = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.GCM = GCM;
+    module.exports = {
+        GCM: GCM
+    };
 }
