@@ -29,7 +29,8 @@ var PAIR = function(ctx) {
                 X1, Y1, T1, T2,
                 a, b;
 
-            if (A == B) { /* Doubling */
+            if (A == B) {
+                /* Doubling */
                 XX = new ctx.FP2(A.getx());
                 YY = new ctx.FP2(A.gety());
                 ZZ = new ctx.FP2(A.getz());
@@ -76,7 +77,8 @@ var PAIR = function(ctx) {
                 }
 
                 A.dbl();
-            } else { /* Addition */
+            } else {
+                /* Addition */
                 X1 = new ctx.FP2(A.getx()); // X1
                 Y1 = new ctx.FP2(A.gety()); // Y1
                 T1 = new ctx.FP2(A.getz()); // Z1
@@ -497,7 +499,8 @@ var PAIR = function(ctx) {
                     u[i].mod(q);
                 }
             }
-        } else { // -(x^2).P = (Beta.x,y)
+        } else {
+            // -(x^2).P = (Beta.x,y)
             q = new ctx.BIG(0);
             q.rcopy(ctx.ROM_CURVE.CURVE_Order);
             x = new ctx.BIG(0);

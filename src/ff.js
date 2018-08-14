@@ -37,7 +37,8 @@ var FF = function(ctx) {
     FF.P_FEXCESS = (1 << (ctx.BIG.BASEBITS * ctx.BIG.NLEN - FF.P_MBITS - 1));
     FF.P_TBITS = (FF.P_MBITS % ctx.BIG.BASEBITS);
     FF.FF_BITS = (ctx.BIG.BIGBITS * FF.FFLEN);
-    FF.HFLEN = (FF.FFLEN / 2); /* Useful for half-size RSA private key operations */
+    /* Useful for half-size RSA private key operations */
+    FF.HFLEN = (FF.FFLEN / 2);
 
     FF.prototype = {
         /* set to zero */
@@ -204,7 +205,8 @@ var FF = function(ctx) {
             var trunc = false,
                 i, carry;
 
-            if (n < 0) { /* -v n signals to do truncation */
+            /* -v n signals to do truncation */
+            if (n < 0) {
                 n = -n;
                 trunc = true;
             }
@@ -326,10 +328,12 @@ var FF = function(ctx) {
             this.rnorm(vp + nd2, n);
         },
 
-        karmul_lower: function(vp, x, xp, y, yp, t, tp, n) { /* Calculates Least Significant bottom half of x*y */
+        /* Calculates Least Significant bottom half of x*y */
+        karmul_lower: function(vp, x, xp, y, yp, t, tp, n) {
             var nd2;
 
-            if (n === 1) { /* only calculate bottom half of product */
+            /* only calculate bottom half of product */
+            if (n === 1) {
                 this.v[vp].copy(ctx.BIG.smul(x.v[xp], y.v[yp]));
 
                 return;
@@ -346,7 +350,8 @@ var FF = function(ctx) {
             this.rnorm(vp + nd2, -nd2); /* truncate it */
         },
 
-        karmul_upper: function(x, y, t, n) { /* Calculates Most Significant upper half of x*y, given lower part */
+        /* Calculates Most Significant upper half of x*y, given lower part */
+        karmul_upper: function(x, y, t, n) {
             var nd2;
 
             nd2 = n / 2;
@@ -404,8 +409,9 @@ var FF = function(ctx) {
             }
         },
 
-        /* return This mod modulus, N is modulus, ND is Montgomery Constant */
-        reduce: function(N, ND) { /* fast karatsuba Montgomery reduction */
+        /* /Fast Karatsuba Montgomery reduction
+         * return This mod modulus, N is modulus, ND is Montgomery Constant */
+        reduce: function(N, ND) {
             var n = N.length,
                 t = new FF(2 * n),
                 r = new FF(n),
@@ -891,7 +897,6 @@ var FF = function(ctx) {
         var i;
 
         for (i = 0; i < a.length; i++) {
-            //  ctx.BIG.cswap(a.v[i],b.v[i],d);
             a.v[i].cswap(b.v[i], d);
         }
     };

@@ -202,7 +202,8 @@ BIG = function(ctx) {
         fshr: function(k) {
             var r, i;
 
-            r = this.w[0] & ((1 << k) - 1); /* shifted out part */
+            /* shifted out part */
+            r = this.w[0] & ((1 << k) - 1);
 
             for (i = 0; i < BIG.NLEN - 1; i++) {
                 this.w[i] = (this.w[i] >> k) | ((this.w[i + 1] << (BIG.BASEBITS - k)) & BIG.BMASK);
@@ -244,7 +245,8 @@ BIG = function(ctx) {
 
             this.w[0] = (this.w[0] << k) & BIG.BMASK;
 
-            return (this.w[BIG.NLEN - 1] >> ((8 * BIG.MODBYTES) % BIG.BASEBITS)); /* return excess - only used in FF.java */
+            /* return excess - only used in ff.js */
+            return (this.w[BIG.NLEN - 1] >> ((8 * BIG.MODBYTES) % BIG.BASEBITS));
         },
 
         /* General shift left by k bits */
@@ -783,7 +785,6 @@ BIG = function(ctx) {
         for (i = 0; i < BIG.MODBYTES; i++) {
             m.fshl(8);
             m.w[0] += b[i + n] & 0xff;
-            //m.inc(b[i]&0xff);
         }
 
         return m;
@@ -847,7 +848,7 @@ BIG = function(ctx) {
 
             b = r & 1;
             m.shl(1);
-            m.w[0] += b; // m.inc(b);
+            m.w[0] += b;
             j++;
             j &= 7;
         }

@@ -65,7 +65,6 @@ var FP = function(ctx) {
         bcopy: function(y) {
             this.f.copy(y);
             this.nres();
-            //alert("4. f= "+this.f.toString());
         },
 
         /* copy from another FP */
@@ -445,7 +444,8 @@ var FP = function(ctx) {
             b.norm();
         }
 
-        if (FP.MODTYPE == FP.GENERALISED_MERSENNE) { // GoldiLocks Only
+        // GoldiLocks Only
+        if (FP.MODTYPE == FP.GENERALISED_MERSENNE) {
             t = d.split(FP.MODBITS);
             b.hcopy(d);
             b.add(t);

@@ -25,6 +25,19 @@ var CTX = function(input_parameter) {
         CTXLIST,
         prepareModule;
 
+    /**
+     * Config fields:
+     *  NB   : Number of bytes in Modulus
+     *  BASE : Number base as power of 2
+     *  NBT  : Number of bits in Modulus
+     *  M8   : Modulus mod 8
+     *  MT   : Modulus Type (Pseudo-Mersenne,...)
+     *  CT   : Curve Type (Weierstrass,...)
+     *  PF   : Pairing Friendly
+     *  ST   : Sextic Twist Type
+     *  SX   : Sign of x parameter
+     */
+
     CTXLIST = {
         "ED25519": {
             "BITS": "256",
