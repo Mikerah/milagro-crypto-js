@@ -34,7 +34,7 @@ for (i = 0; i < 100; i++) {
 }
 rng.seed(100, RAW);
 
-var sha = ctx.MPIN.HASH_TYPE;
+var sha = ctx.ECP.HASH_TYPE;
 
 var S = [];
 var SST = [];
