@@ -47,8 +47,8 @@ var AES = function() {
     AES.CTR16 = 45;
 
     AES.prototype = {
-        /* reset cipher */
-        reset: function(m, iv) { /* reset mode, or reset iv */
+        /* reset cipher - mode or iv */
+        reset: function(m, iv) {
             var i;
 
             this.mode = m;
@@ -88,7 +88,7 @@ var AES = function() {
         },
 
         /* Initialise cipher */
-        init: function(m, nk, key, iv) { /* Key=16 bytes */
+        init: function(m, nk, key, iv) {
             /* Key Scheduler. Create expanded encryption key */
             var CipherKey = [],
                 b = [],
@@ -447,7 +447,7 @@ var AES = function() {
         },
 
         /* Clean up and delete left-overs */
-        end: function() { // clean up
+        end: function() {
             var i;
 
             for (i = 0; i < 4 * (this.Nr + 1); i++) {
@@ -474,11 +474,13 @@ var AES = function() {
         return (((x) << 24) | ((x) >>> 8));
     };
 
-    AES.pack = function(b) { /* pack 4 bytes into a 32-bit Word */
+    /* pack 4 bytes into a 32-bit Word */
+    AES.pack = function(b) {
         return (((b[3]) & 0xff) << 24) | ((b[2] & 0xff) << 16) | ((b[1] & 0xff) << 8) | (b[0] & 0xff);
     };
 
-    AES.unpack = function(a) { /* unpack bytes from a word */
+    /* unpack bytes from a word */
+    AES.unpack = function(a) {
         var b = [];
         b[0] = (a & 0xff);
         b[1] = ((a >>> 8) & 0xff);
@@ -487,7 +489,8 @@ var AES = function() {
         return b;
     };
 
-    AES.bmul = function(x, y) { /* x.y= AntiLog(Log(x) + Log(y)) */
+    /* x.y= AntiLog(Log(x) + Log(y)) */
+    AES.bmul = function(x, y) {
         var ix = (x & 0xff),
             iy = (y & 0xff),
             lx = (AES.ltab[ix]) & 0xff,
@@ -511,14 +514,16 @@ var AES = function() {
         return AES.pack(b);
     };
 
-    AES.product = function(x, y) { /* dot product of two 4-byte arrays */
+    /* dot product of two 4-byte arrays */
+    AES.product = function(x, y) {
         var xb = AES.unpack(x),
             yb = AES.unpack(y);
 
         return (AES.bmul(xb[0], yb[0]) ^ AES.bmul(xb[1], yb[1]) ^ AES.bmul(xb[2], yb[2]) ^ AES.bmul(xb[3], yb[3])) & 0xff;
     };
 
-    AES.InvMixCol = function(x) { /* matrix Multiplication */
+    /* matrix Multiplication */
+    AES.InvMixCol = function(x) {
         var b = [],
             y, m;
 
@@ -535,7 +540,8 @@ var AES = function() {
         return y;
     };
 
-    AES.InCo = [0xB, 0xD, 0x9, 0xE]; /* Inverse Coefficients */
+    /* Inverse Coefficients */
+    AES.InCo = [0xB, 0xD, 0x9, 0xE];
     AES.rco = [1, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47];
 
     AES.ptab = [
@@ -705,5 +711,7 @@ var AES = function() {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.AES = AES;
+    module.exports = {
+        AES: AES
+    };
 }

@@ -27,14 +27,12 @@ var expect = chai.expect;
 
 var pf_curves = ['BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
 
-for (var i = pf_curves.length - 1; i >= 0; i--) {
+pf_curves.forEach(function(curve) {
 
-    describe('TEST PAIR ' + pf_curves[i], function() {
+    describe('TEST PAIR ' + curve, function() {
 
-        var ctx = new CTX(pf_curves[i]);
+        var ctx = new CTX(curve);
         var rng = new ctx.RAND();
-
-        var j = i;
 
         var r = new ctx.BIG(0);
         var x = new ctx.BIG(0);
@@ -56,6 +54,7 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
 
         var qx = new ctx.FP2(0);
         var qy = new ctx.FP2(0);
+        var Gaux = new ctx.ECP(0);
 
         // Set curve order
         r.rcopy(ctx.ROM_CURVE.CURVE_Order);
@@ -64,6 +63,26 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
         x.rcopy(ctx.ROM_CURVE.CURVE_Gx);
         y.rcopy(ctx.ROM_CURVE.CURVE_Gy);
         G.setxy(x,y);
+
+        var Q = new ctx.ECP2(0);
+        var Q1 = new ctx.ECP2(0);
+        var Q2 = new ctx.ECP2(0);
+        var Qaux = new ctx.ECP2(0);
+
+        var g11 = new ctx.FP12(0);
+        var g12 = new ctx.FP12(0);
+        var g21 = new ctx.FP12(0);
+        var g22 = new ctx.FP12(0);
+        var g1s = new ctx.FP12(0);
+        var gs1 = new ctx.FP12(0);
+        var aux1 = new ctx.FP12(0);
+        var aux2 = new ctx.FP12(0);
+
+        var qx = new ctx.FP2(0);
+        var qy = new ctx.FP2(0);
+
+        // Set pairing interface
+        var PAIR = ctx.PAIR;
 
         // Set generator of G2
         x.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
@@ -77,115 +96,111 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
 
 
         before(function(done) {
+            this.timeout(0);
+
             var RAW = [];
             rng.clean();
             for (i = 0; i < 100; i++) RAW[i] = i;
             rng.seed(100, RAW);
+
+            // Precompute terms
+            x = ctx.BIG.randomnum(r,rng);
+            y = ctx.BIG.randomnum(r,rng);
+            s = ctx.BIG.randomnum(r,rng);
+            G1 = PAIR.G1mul(G,x);
+            Q1 = PAIR.G2mul(Q,y);
+            sG1 = PAIR.G1mul(G1,s);
+            sQ1 = PAIR.G2mul(Q1,s);
+            x = ctx.BIG.randomnum(r,rng);
+            y = ctx.BIG.randomnum(r,rng);
+            G2 = PAIR.G1mul(G,x);
+            Q2 = PAIR.G2mul(Q,y);
+
+            g11 = PAIR.ate(Q1, G1);
+            g11 = PAIR.fexp(g11);
+            g22 = PAIR.ate(Q2, G2);
+            g22 = PAIR.fexp(g22);
+
+            g12 = PAIR.ate(Q1, G2);
+            g12 = PAIR.fexp(g12);
+            g21 = PAIR.ate(Q2, G1);
+            g21 = PAIR.fexp(g21);
             done();
         });
 
         // Test that e(sQ,G) = e(Q,sG) = e(Q,G)^s, s random
-        it('test Bilinearity 1', function(done) {
+        it('test Bilinearity smul', function(done) {
             this.timeout(0);
 
-            for (var k = 3 ; k > 0; k--) {
-                x = ctx.BIG.randomnum(r,rng);
-                y = ctx.BIG.randomnum(r,rng);
-                s = ctx.BIG.randomnum(r,rng);
-                G1 = ctx.PAIR.G1mul(G,x);
-                Q1 = ctx.PAIR.G2mul(Q,y);
-                G2 = ctx.PAIR.G1mul(G1,s);
-                Q2 = ctx.PAIR.G2mul(Q1,s);
-                
-                g1 = ctx.PAIR.ate(Q1, G2);
-                g1 = ctx.PAIR.fexp(g1);
-                g2 = ctx.PAIR.ate(Q2, G1);
-                g2 = ctx.PAIR.fexp(g2);
+            g1s = PAIR.ate(Q1, sG1);
+            g1s = PAIR.fexp(g1s);
+            gs1 = PAIR.ate(sQ1, G1);
+            gs1 = PAIR.fexp(gs1);
 
-                expect(g1.toString()).to.be.equal(g2.toString());
-                
-                g2 = ctx.PAIR.ate(Q1, G1);
-                g2 = ctx.PAIR.fexp(g2);
-                g2 = ctx.PAIR.GTpow(g2,s);
+            expect(g1s.toString()).to.be.equal(gs1.toString());
 
-                expect(g1.toString()).to.be.equal(g2.toString());
-            }
+            gs1 = PAIR.ate(Q1, G1);
+            gs1 = PAIR.fexp(gs1);
+            gs1 = PAIR.GTpow(gs1,s);
+
+            expect(g1s.toString()).to.be.equal(gs1.toString());
+
             done();
         });
 
-        // Test that e(Q1+Q2,G1) = e(Q1,G1).e(Q2,G1) and e(Q1,G1+G2) = e(Q1,G1).e(Q1,G2)
-        it('test Bilinearity 2', function(done) {
-            this.timeout(0);
+        if (ctx.ECP.CURVE_PAIRING_TYPE === 1 || ctx.ECP.CURVE_PAIRING_TYPE === 2) {
+            // Test that e(Q1+Q2,G1) = e(Q1,G1).e(Q2,G1)
+            it('test Bilinearity 1st', function(done) {
+                this.timeout(0);
 
-            for (var k = 3; k > 0; k--) {
-                x = ctx.BIG.randomnum(r,rng);
-                y = ctx.BIG.randomnum(r,rng);
-                G1 = ctx.PAIR.G1mul(G,x);
-                Q1 = ctx.PAIR.G2mul(Q,y);
-                x = ctx.BIG.randomnum(r,rng);
-                y = ctx.BIG.randomnum(r,rng);
-                G2 = ctx.PAIR.G1mul(G,x);
-                Q2 = ctx.PAIR.G2mul(Q,y);
+                aux1.copy(g11);
+                aux1.mul(g21);
 
-                g2 = ctx.PAIR.ate(Q1, G1);
-                g2 = ctx.PAIR.fexp(g2);
-                g3 = ctx.PAIR.ate(Q1, G2);
-                g3 = ctx.PAIR.fexp(g3);
-                g2.mul(g3);
+                Qaux.copy(Q1);
+                Qaux.add(Q2);
+                Qaux.affine();
 
-                G2.add(G1);
-                G2.affine();
+                aux2 = PAIR.ate(Qaux, G1);
+                aux2 = PAIR.fexp(aux2);
 
-                g1 = ctx.PAIR.ate(Q1, G2);
-                g1 = ctx.PAIR.fexp(g1);
+                expect(aux1.toString()).to.be.equal(aux2.toString());
 
-                expect(g1.toString()).to.be.equal(g2.toString());
+                done();
+            });
 
-                g2 = ctx.PAIR.ate(Q1, G1);
-                g2 = ctx.PAIR.fexp(g2);
-                g3 = ctx.PAIR.ate(Q2, G1);
-                g3 = ctx.PAIR.fexp(g3);
-                g2.mul(g3);
+            // Test that e(Q1,G1+G2) = e(Q1,G1).e(Q1,G2)
+            it('test Bilinearity 2nd', function(done) {
+                this.timeout(0);
 
-                Q2.add(Q1);
-                Q2.affine();
+                aux1.copy(g11);
+                aux1.mul(g12);
 
-                g1 = ctx.PAIR.ate(Q2, G1);
-                g1 = ctx.PAIR.fexp(g1);
+                Gaux.copy(G1);
+                Gaux.add(G2);
+                Gaux.affine();
 
-                expect(g1.toString()).to.be.equal(g2.toString());
-            }
-            done();
-        });
+                aux2 = PAIR.ate(Q1, Gaux);
+                aux2 = PAIR.fexp(aux2);
 
-        // Test that e(Q1+Q2,G1+G2) = e(Q1,G1).e(Q2,G1).e(Q1,G2).e(Q2,G2)
+                expect(aux1.toString()).to.be.equal(aux2.toString());
+
+                done();
+            });
+        }
+
+        // Test that ate2 correctly computes e(Q1,G1).e(Q2,G2)
         it('test Double Pairing', function(done) {
             this.timeout(0);
 
-            for (var k = 3; k > 0; k--) {
-                x = ctx.BIG.randomnum(r,rng);
-                y = ctx.BIG.randomnum(r,rng);
-                G1 = ctx.PAIR.G1mul(G,x);
-                Q1 = ctx.PAIR.G2mul(Q,y);
-                x = ctx.BIG.randomnum(r,rng);
-                y = ctx.BIG.randomnum(r,rng);
-                G2 = ctx.PAIR.G1mul(G,x);
-                Q2 = ctx.PAIR.G2mul(Q,y);
+            aux1.copy(g11);
+            aux1.mul(g22);
 
-                g1 = ctx.PAIR.ate(Q1, G1);
-                g1 = ctx.PAIR.fexp(g1);
-                g2 = ctx.PAIR.ate(Q2, G2);
-                g2 = ctx.PAIR.fexp(g2);
-                g1.mul(g2);
+            aux2 = PAIR.ate2(Q1,G1,Q2,G2);
+            aux2 = PAIR.fexp(aux2);
 
-                g2 = ctx.PAIR.ate2(Q1,G1,Q2,G2);
-                g2 = ctx.PAIR.fexp(g2);
+            expect(aux1.toString()).to.be.equal(aux2.toString());
 
-                expect(g1.toString()).to.be.equal(g2.toString());
-            }
             done();
         });
-
-
     });
-}
+});

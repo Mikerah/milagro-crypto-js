@@ -25,6 +25,19 @@ var CTX = function(input_parameter) {
         CTXLIST,
         prepareModule;
 
+    /**
+     * Config fields:
+     *  NB   : Number of bytes in Modulus
+     *  BASE : Number base as power of 2
+     *  NBT  : Number of bits in Modulus
+     *  M8   : Modulus mod 8
+     *  MT   : Modulus Type (Pseudo-Mersenne,...)
+     *  CT   : Curve Type (Weierstrass,...)
+     *  PF   : Pairing Friendly
+     *  ST   : Sextic Twist Type
+     *  SX   : Sign of x parameter
+     */
+
     CTXLIST = {
         "ED25519": {
             "BITS": "256",
@@ -405,7 +418,6 @@ var CTX = function(input_parameter) {
     prepareModule("HASH512");
     prepareModule("SHA3");
     prepareModule("RAND");
-    prepareModule("NewHope");
     prepareModule("NHS");
 
     if (typeof input_parameter === "undefined") {
@@ -414,6 +426,7 @@ var CTX = function(input_parameter) {
 
     ctx.config = CTXLIST[input_parameter];
 
+    // Set BIG parameters
     prepareModule("BIG");
     prepareModule("DBIG", "big");
 

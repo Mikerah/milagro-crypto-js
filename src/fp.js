@@ -65,7 +65,6 @@ var FP = function(ctx) {
         bcopy: function(y) {
             this.f.copy(y);
             this.nres();
-            //alert("4. f= "+this.f.toString());
         },
 
         /* copy from another FP */
@@ -180,7 +179,6 @@ var FP = function(ctx) {
             var s = false,
                 d, n;
 
-            //this.norm();
             if (c < 0) {
                 c = -c;
                 s = true;
@@ -200,21 +198,6 @@ var FP = function(ctx) {
                 }
             }
 
-            /*
-                    if (c<=ctx.BIG.NEXCESS && this.XES*c<=FP.FEXCESS)
-                    {
-                        this.f.imul(c);
-                        this.XES*=c;
-                        this.norm();
-                    }
-                    else
-                    {
-            //          var p=new ctx.BIG(0);
-            //          p.rcopy(ctx.ROM_FIELD.Modulus);
-                        var d=this.f.pxmul(c);
-                        this.f.copy(FP.mod(d));
-                    }
-            */
             if (s) {
                 this.neg();
                 this.norm();
@@ -229,7 +212,6 @@ var FP = function(ctx) {
             if (this.XES * this.XES > FP.FEXCESS) {
                 this.reduce();
             }
-            //if ((ea+1)>= Math.floor((FP.FEXCESS-1)/(ea+1))) this.reduce();
 
             d = ctx.BIG.sqr(this.f);
             t = FP.mod(d);
@@ -356,9 +338,7 @@ var FP = function(ctx) {
 
                 m.sqr();
             }
-
             r.reduce();
-
             return r;
         },
 
@@ -426,13 +406,6 @@ var FP = function(ctx) {
         return r;
     };
 
-    /* calculate Field Excess
-    FP.EXCESS=function(a)
-    {
-        return ((a.w[ctx.BIG.NLEN-1]&FP.OMASK)>>(FP.MODBITS%ctx.BIG.BASEBITS))+1;
-    };
-    */
-
     /* reduce a ctx.DBIG to a ctx.BIG using a "special" modulus */
     FP.mod = function(d) {
         var b = new ctx.BIG(0),
@@ -454,7 +427,6 @@ var FP = function(ctx) {
             tw = t.w[ctx.BIG.NLEN - 1];
             t.w[ctx.BIG.NLEN - 1] &= FP.TMASK;
             t.inc(ctx.ROM_FIELD.MConst * ((tw >> FP.TBITS) + (v << (ctx.BIG.BASEBITS - FP.TBITS))));
-            //      b.add(t);
             t.norm();
 
             return t;
@@ -472,7 +444,8 @@ var FP = function(ctx) {
             b.norm();
         }
 
-        if (FP.MODTYPE == FP.GENERALISED_MERSENNE) { // GoldiLocks Only
+        // GoldiLocks Only
+        if (FP.MODTYPE == FP.GENERALISED_MERSENNE) {
             t = d.split(FP.MODBITS);
             b.hcopy(d);
             b.add(t);
@@ -486,7 +459,6 @@ var FP = function(ctx) {
 
             b.add(tt);
             b.add(lo);
-            //b.norm();
             tt.shl(FP.MODBITS / 2);
             b.add(tt);
 
@@ -512,5 +484,7 @@ var FP = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.FP = FP;
+    module.exports = {
+        FP: FP
+    };
 }

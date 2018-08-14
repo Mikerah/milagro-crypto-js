@@ -106,8 +106,8 @@ var SHA3 = function(ctx) {
             }
         },
 
-        /* Initialise Hash function */
-        init: function(olen) { /* initialise */
+        /* Initialize Hash function */
+        init: function(olen) {
             var i, j;
             for (i = 0; i < 5; i++) {
                 this.S[i] = [];
@@ -121,14 +121,15 @@ var SHA3 = function(ctx) {
         },
 
         /* process a single byte */
-        process: function(byt) { /* process the next message byte */
+        process: function(byt) {
             var i, j, k, b, cnt, el;
 
             cnt = (this.length % this.rate);
             b = cnt % 8;
             cnt >>= 3;
             i = cnt % 5;
-            j = Math.floor(cnt / 5); /* process by columns! */
+            /* process by columns! */
+            j = Math.floor(cnt / 5);
 
             el = new ctx.UInt64(0, byt);
             for (k = 0; k < b; k++) {
@@ -182,31 +183,36 @@ var SHA3 = function(ctx) {
                 this.transform();
             }
         },
-
-        hash: function(buff) { /* pad message and finish - supply digest */
+        /* pad message and finish - supply digest */
+        hash: function(buff) {
             var q = this.rate - (this.length % this.rate);
             if (q == 1) {
                 this.process(0x86);
             } else {
-                this.process(0x06); /* 0x06 for SHA-3 */
+                /* 0x06 for SHA-3 */
+                this.process(0x06);
                 while (this.length % this.rate != this.rate - 1) {
                     this.process(0x00);
                 }
-                this.process(0x80); /* this will force a final transform */
+                /* this will force a final transform */
+                this.process(0x80);
             }
             this.squeeze(buff, this.len);
         },
 
-        shake: function(buff, olen) { /* pad message and finish - supply digest */
+        /* pad message and finish - supply digest */
+        shake: function(buff, olen) {
             var q = this.rate - (this.length % this.rate);
             if (q == 1) {
                 this.process(0x9f);
             } else {
-                this.process(0x1f); /* 0x06 for SHA-3 */
+                /* 0x06 for SHA-3 */
+                this.process(0x1f);
                 while (this.length % this.rate != this.rate - 1) {
                     this.process(0x00);
                 }
-                this.process(0x80); /* this will force a final transform */
+                /* this will force a final transform */
+                this.process(0x80);
             }
             this.squeeze(buff, olen);
         }
@@ -264,5 +270,7 @@ var SHA3 = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.SHA3 = SHA3;
+    module.exports = {
+        SHA3: SHA3
+    };
 }

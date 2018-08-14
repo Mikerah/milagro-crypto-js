@@ -28,7 +28,9 @@ var HASH384 = function(ctx) {
     };
 
     HASH384.prototype = {
-        transform: function() { /* basic transformation step */
+
+        /* basic transformation step */
+        transform: function() {
             var a, b, c, d, e, f, g, hh, t1, t2, j;
 
             for (j = 16; j < 80; j++) {
@@ -44,7 +46,8 @@ var HASH384 = function(ctx) {
             g = this.h[6].copy();
             hh = this.h[7].copy();
 
-            for (j = 0; j < 80; j++) { /* 80 times - mush it up */
+            /* 80 times - mush it up */
+            for (j = 0; j < 80; j++) {
                 t1 = hh.copy();
                 t1.add(HASH384.Sig1(e)).add(HASH384.Ch(e, f, g)).add(HASH384.HK[j]).add(this.w[j]);
 
@@ -73,8 +76,8 @@ var HASH384 = function(ctx) {
             this.h[7].add(hh);
         },
 
-        /* Initialise Hash function */
-        init: function() { /* initialise */
+        /* Initialize Hash function */
+        init: function() {
             var i;
 
             for (i = 0; i < 80; i++) {
@@ -93,7 +96,7 @@ var HASH384 = function(ctx) {
         },
 
         /* process a single byte */
-        process: function(byt) { /* process the next message byte */
+        process: function(byt) {
             var cnt, e;
 
             cnt = (this.length[0].bot >>> 6) % 16;
@@ -128,7 +131,8 @@ var HASH384 = function(ctx) {
             this.process(n & 0xff);
         },
 
-        hash: function() { /* pad message and finish - supply digest */
+        /* pad message and finish - supply digest */
+        hash: function() {
             var digest = [],
                 len0, len1,
                 i;
@@ -144,7 +148,8 @@ var HASH384 = function(ctx) {
             this.w[15] = len0;
             this.transform();
 
-            for (i = 0; i < HASH384.len; i++) { /* convert to bytes */
+            /* convert to bytes */
+            for (i = 0; i < HASH384.len; i++) {
                 digest[i] = HASH384.R(8 * (7 - i % 8), this.h[i >>> 3]).bot & 0xff;
             }
 
@@ -275,5 +280,7 @@ var HASH384 = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.HASH384 = HASH384;
+    module.exports = {
+        HASH384: HASH384
+    };
 }

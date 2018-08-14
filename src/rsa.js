@@ -18,7 +18,6 @@
 */
 
 /* RSA API Functions */
-
 var RSA,
     rsa_private_key,
     rsa_public_key;
@@ -120,7 +119,8 @@ RSA = function(ctx) {
             return R;
         },
 
-        KEY_PAIR: function(rng, e, PRIV, PUB) { /* IEEE1363 A16.11/A16.12 more or less */
+        /* IEEE1363 A16.11/A16.12 more or less */
+        KEY_PAIR: function(rng, e, PRIV, PUB) {
             var n = PUB.n.length >> 1,
                 t = new ctx.FF(n),
                 p1 = new ctx.FF(n),
@@ -518,7 +518,7 @@ rsa_public_key = function(ctx) {
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
     module.exports = {
         RSA: RSA,
-        rsa_public_key: rsa_public_key,
-        rsa_private_key: rsa_private_key
+        rsa_private_key: rsa_private_key,
+        rsa_public_key: rsa_public_key
     };
 }

@@ -69,7 +69,6 @@ var AES_ENCRYPT = function(mode, K, M, IV) {
     var fin;
     var i, j, ipt, opt;
     var buff = [];
-    /*var clen=16+(Math.floor(M.length/16))*16;*/
 
     var C = [];
 
@@ -91,13 +90,6 @@ var AES_ENCRYPT = function(mode, K, M, IV) {
             C[opt++] = buff[i];
     }
 
-    /* last block, filled up to i-th index */
-
-    // padlen = 16 - i;
-    // for (j = i; j < 16; j++) buff[j] = padlen;
-    // a.encrypt(buff);
-    // for (i = 0; i < 16; i++)
-    //     C[opt++] = buff[i];
     a.end();
     return C;
 };
@@ -133,15 +125,7 @@ var AES_DECRYPT = function(mode, K, C, IV) { /* padding is removed */
     }
 
     a.end();
-    // bad = false;
-    // padlen = buff[15];
-    // console.log("PADLEN :", padlen)
-    // if (i != 15 || padlen < 1 || padlen > 16) bad = true;
-    // if (padlen >= 2 && padlen <= 16)
-    //     for (i = 16 - padlen; i < 16; i++)
-    //         if (buff[i] != padlen) bad = true;
 
-    // if (!bad)
     for (i = 0; i < 16; i++)
         MM[opt++] = buff[i];
 
