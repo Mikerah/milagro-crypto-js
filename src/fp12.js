@@ -61,7 +61,39 @@ var FP12 = function(ctx) {
         /* test x==1 ? */
         isunity: function() {
             var one = new ctx.FP4(1);
-            return (this.a.equals(one) && this.b.iszilch() && this.b.iszilch());
+            return (this.a.equals(one) && this.b.iszilch() && this.c.iszilch());
+        },
+
+
+        /* conditional copy of g to this depending on d */
+        cmove: function(g, d) {
+            this.a.cmove(g.a, d);
+            this.b.cmove(g.b, d);
+            this.c.cmove(g.c, d);
+        },
+
+
+        /* Constant time select from pre-computed table */
+        select: function(g, b) {
+            var invf = new FP12(0),
+                m, babs;
+
+            m = b >> 31;
+            babs = (b ^ m) - m;
+            babs = (babs - 1) / 2;
+
+            this.cmove(g[0], FP12.teq(babs, 0));
+            this.cmove(g[1], FP12.teq(babs, 1));
+            this.cmove(g[2], FP12.teq(babs, 2));
+            this.cmove(g[3], FP12.teq(babs, 3));
+            this.cmove(g[4], FP12.teq(babs, 4));
+            this.cmove(g[5], FP12.teq(babs, 5));
+            this.cmove(g[6], FP12.teq(babs, 6));
+            this.cmove(g[7], FP12.teq(babs, 7));
+
+            invf.copy(this);
+            invf.conj();
+            this.cmove(invf, (m & 1));
         },
 
         /* extract a from this */
@@ -673,99 +705,89 @@ var FP12 = function(ctx) {
         return r;
     };
 
-    /* p=q0^u0.q1^u1.q2^u2.q3^u3 */
-    /* Timing attack secure, but not cache attack secure */
 
+    /* return 1 if b==c, no branching */
+    FP12.teq = function(b, c) {
+        var x = b ^ c;
+        x -= 1; // if x=0, x now -1
+        return ((x >> 31) & 1);
+    };
+
+    /* p=q0^u0.q1^u1.q2^u2.q3^u3 */
+    // Bos & Costello https://eprint.iacr.org/2013/458.pdf
+    // Faz-Hernandez & Longa & Sanchez  https://eprint.iacr.org/2013/158.pdf
+    // Side channel attack secure
     FP12.pow4 = function(q, u) {
-        var a = [],
-            g = [],
-            s = [],
-            c = new FP12(1),
+        var g = [],
+            r = new FP12(0),
             p = new FP12(0),
             t = [],
             mt = new ctx.BIG(0),
             w = [],
-            i, j, nb, m;
+            s = [],
+            i, j, k, nb, bt, pb;
 
         for (i = 0; i < 4; i++) {
-            t[i] = new ctx.BIG(u[i]);
+            t[i] = new ctx.BIG(u[i]); t[i].norm();
         }
-
-        s[0] = new FP12(0);
-        s[1] = new FP12(0);
 
         g[0] = new FP12(q[0]);
-        s[0].copy(q[1]);
-        s[0].conj();
-        g[0].mul(s[0]);
-        g[1] = new FP12(g[0]);
-        g[2] = new FP12(g[0]);
-        g[3] = new FP12(g[0]);
-        g[4] = new FP12(q[0]);
-        g[4].mul(q[1]);
-        g[5] = new FP12(g[4]);
-        g[6] = new FP12(g[4]);
-        g[7] = new FP12(g[4]);
+        g[1] = new FP12(g[0]); g[1].mul(q[1]);
+        g[2] = new FP12(g[0]); g[2].mul(q[2]);
+        g[3] = new FP12(g[1]); g[3].mul(q[2]);
+        g[4] = new FP12(q[0]); g[4].mul(q[3]);
+        g[5] = new FP12(g[1]); g[5].mul(q[3]);
+        g[6] = new FP12(g[2]); g[6].mul(q[3]);
+        g[7] = new FP12(g[3]); g[7].mul(q[3]);
 
-        s[1].copy(q[2]);
-        s[0].copy(q[3]);
-        s[0].conj();
-        s[1].mul(s[0]);
-        s[0].copy(s[1]);
-        s[0].conj();
-        g[1].mul(s[0]);
-        g[2].mul(s[1]);
-        g[5].mul(s[0]);
-        g[6].mul(s[1]);
-        s[1].copy(q[2]);
-        s[1].mul(q[3]);
-        s[0].copy(s[1]);
-        s[0].conj();
-        g[0].mul(s[0]);
-        g[3].mul(s[1]);
-        g[4].mul(s[0]);
-        g[7].mul(s[1]);
+        // Make it odd
+        pb=1-t[0].parity();
+        t[0].inc(pb);
+        t[0].norm();
 
-        /* if power is even add 1 to power, and add q to correction */
-
-        for (i = 0; i < 4; i++) {
-            if (t[i].parity() == 0) {
-                t[i].inc(1);
-                t[i].norm();
-                c.mul(q[i]);
-            }
-            mt.add(t[i]);
-            mt.norm();
+        // Number of bits
+        mt.zero();
+        for (i=0;i<4;i++) {
+            mt.or(t[i]);
         }
-        c.conj();
-        nb = 1 + mt.nbits();
 
-        /* convert exponent to signed 1-bit window */
-        for (j = 0; j < nb; j++) {
-            for (i = 0; i < 4; i++) {
-                a[i] = (t[i].lastbits(2) - 2);
-                t[i].dec(a[i]);
-                t[i].norm();
-                t[i].fshr(1);
-            }
-            w[j] = (8 * a[0] + 4 * a[1] + 2 * a[2] + a[3]);
+        nb=1+mt.nbits();
+
+        // Sign pivot
+        s[nb-1]=1;
+        for (i=0;i<nb-1;i++) {
+            t[0].fshr(1);
+            s[i]=2*t[0].parity()-1;
         }
-        w[nb] = (8 * t[0].lastbits(2) + 4 * t[1].lastbits(2) + 2 * t[2].lastbits(2) + t[3].lastbits(2));
-        p.copy(g[Math.floor((w[nb] - 1) / 2)]);
 
-        for (i = nb - 1; i >= 0; i--) {
-            m = w[i] >> 31;
-            j = (w[i] ^ m) - m; /* j=abs(w[i]) */
-            j = (j - 1) / 2;
-            s[0].copy(g[j]);
-            s[1].copy(g[j]);
-            s[1].conj();
+        // Recoded exponent
+        for (i=0; i<nb; i++) {
+            w[i]=0;
+            k=1;
+            for (j=1; j<4; j++) {
+                bt=s[i]*t[j].parity();
+                t[j].fshr(1);
+                t[j].dec(bt>>1);
+                t[j].norm();
+                w[i]+=bt*k;
+                k*=2;
+            }
+        }
+
+        // Main loop
+        p.select(g,2*w[nb-1]+1);
+        for (i=nb-2;i>=0;i--) {
             p.usqr();
-            p.mul(s[m & 1]);
+            r.select(g,2*w[i]+s[i]);
+            p.mul(r);
         }
-        p.mul(c); /* apply correction */
-        p.reduce();
 
+        // apply correction
+        r.copy(q[0]); r.conj();
+        r.mul(p);
+        p.cmove(r,pb);
+
+        p.reduce();
         return p;
     };
 

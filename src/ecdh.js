@@ -27,13 +27,9 @@ var ECDH = function(ctx) {
         INVALID: -4,
         EFS: ctx.BIG.MODBYTES,
         EGS: ctx.BIG.MODBYTES,
-        EAS: 16,
-        EBS: 16,
         SHA256: 32,
         SHA384: 48,
         SHA512: 64,
-
-        HASH_TYPE: 64,
 
         /* Convert Integer to n-byte array */
         inttobytes: function(n, len) {
@@ -80,48 +76,23 @@ var ECDH = function(ctx) {
 
         hashit: function(sha, A, n, B, pad) {
             var R = [],
-                H, W, i, len;
+                H, W, i;
 
             if (sha == this.SHA256) {
                 H = new ctx.HASH256();
-                H.process_array(A);
-
-                if (n > 0) {
-                    H.process_num(n);
-                }
-
-                if (B != null) {
-                    H.process_array(B);
-                }
-
-                R = H.hash();
             } else if (sha == this.SHA384) {
                 H = new ctx.HASH384();
-                H.process_array(A);
-
-                if (n > 0) {
-                    H.process_num(n);
-                }
-
-                if (B != null) {
-                    H.process_array(B);
-                }
-
-                R = H.hash();
             } else if (sha == this.SHA512) {
                 H = new ctx.HASH512();
-                H.process_array(A);
-
-                if (n > 0) {
-                    H.process_num(n);
-                }
-
-                if (B != null) {
-                    H.process_array(B);
-                }
-
-                R = H.hash();
             }
+
+            if (n > 0) {
+                H.process_num(n);
+            }
+            if (B != null) {
+                H.process_array(B);
+            }
+            R = H.hash();
 
             if (R.length == 0) {
                 return null;
@@ -133,18 +104,16 @@ var ECDH = function(ctx) {
 
             W = [];
 
-            len = ctx.BIG.MODBYTES;
-
-            if (sha >= len) {
-                for (i = 0; i < len; i++) {
+            if (sha >= pad) {
+                for (i = 0; i < pad; i++) {
                     W[i] = R[i];
                 }
             } else {
                 for (i = 0; i < sha; i++) {
-                    W[i + len - sha] = R[i];
+                    W[i + pad - sha] = R[i];
                 }
 
-                for (i = 0; i < len - sha; i++) {
+                for (i = 0; i < pad - sha; i++) {
                     W[i] = 0;
                 }
             }
@@ -292,7 +261,6 @@ var ECDH = function(ctx) {
 
             K0 = new Array(b);
 
-            //b=K0.length;
             if (olen < 4) {
                 return 0;
             }
@@ -340,7 +308,6 @@ var ECDH = function(ctx) {
                 buff = [],
                 C = [],
                 fin, padlen, i, j, ipt, opt;
-            /*var clen=16+(Math.floor(M.length/16))*16;*/
 
             a.init(ctx.AES.CBC, K.length, K, null);
 
@@ -456,21 +423,9 @@ var ECDH = function(ctx) {
 
         KEY_PAIR_GENERATE: function(RNG, S, W) {
             var res = 0,
-                r, gx, gy, s,
-                G, WP;
-            //      var T=[];
-            G = new ctx.ECP(0);
+                r, s, G, WP;
 
-            gx = new ctx.BIG(0);
-            gx.rcopy(ctx.ROM_CURVE.CURVE_Gx);
-
-            if (ctx.ECP.CURVETYPE != ctx.ECP.MONTGOMERY) {
-                gy = new ctx.BIG(0);
-                gy.rcopy(ctx.ROM_CURVE.CURVE_Gy);
-                G.setxy(gx, gy);
-            } else {
-                G.setx(gx);
-            }
+            G = ctx.ECP.generator();
 
             r = new ctx.BIG(0);
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
@@ -485,7 +440,7 @@ var ECDH = function(ctx) {
             s.toBytes(S);
 
             WP = G.mul(s);
-            WP.toBytes(W);
+            WP.toBytes(W,false);
 
             return res;
         },
@@ -562,18 +517,13 @@ var ECDH = function(ctx) {
 
         ECPSP_DSA: function(sha, RNG, S, F, C, D) {
             var T = [],
-                i, gx, gy, r, s, f, c, d, u, vx, w,
+                i, r, s, f, c, d, u, vx, w,
                 G, V, B;
 
             B = this.hashit(sha, F, 0, null, ctx.BIG.MODBYTES);
 
-            gx = new ctx.BIG(0);
-            gx.rcopy(ctx.ROM_CURVE.CURVE_Gx);
-            gy = new ctx.BIG(0);
-            gy.rcopy(ctx.ROM_CURVE.CURVE_Gy);
+            G = ctx.ECP.generator();
 
-            G = new ctx.ECP(0);
-            G.setxy(gx, gy);
             r = new ctx.BIG(0);
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
@@ -618,18 +568,13 @@ var ECDH = function(ctx) {
         ECPVP_DSA: function(sha, W, F, C, D) {
             var B = [],
                 res = 0,
-                r, gx, gy, f, c, d, h2,
+                r, f, c, d, h2,
                 G, WP, P;
 
             B = this.hashit(sha, F, 0, null, ctx.BIG.MODBYTES);
 
-            gx = new ctx.BIG(0);
-            gx.rcopy(ctx.ROM_CURVE.CURVE_Gx);
-            gy = new ctx.BIG(0);
-            gy.rcopy(ctx.ROM_CURVE.CURVE_Gy);
+            G = ctx.ECP.generator();
 
-            G = new ctx.ECP(0);
-            G.setxy(gx, gy);
             r = new ctx.BIG(0);
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
@@ -694,11 +639,11 @@ var ECDH = function(ctx) {
                 VZ[2 * this.EFS + 1 + i] = Z[i];
             }
 
-            K = this.KDF2(sha, VZ, P1, this.EFS);
+            K = this.KDF2(sha, VZ, P1, 2*ctx.ECP.AESKEY);
 
-            for (i = 0; i < this.EAS; i++) {
+            for (i = 0; i < ctx.ECP.AESKEY; i++) {
                 K1[i] = K[i];
-                K2[i] = K[this.EAS + i];
+                K2[i] = K[ctx.ECP.AESKEY + i];
             }
 
             C = this.AES_CBC_IV0_ENCRYPT(K1, M);
@@ -742,11 +687,11 @@ var ECDH = function(ctx) {
                 VZ[2 * this.EFS + 1 + i] = Z[i];
             }
 
-            K = this.KDF2(sha, VZ, P1, this.EFS);
+            K = this.KDF2(sha, VZ, P1, 2*ctx.ECP.AESKEY);
 
-            for (i = 0; i < this.EAS; i++) {
+            for (i = 0; i < ctx.ECP.AESKEY; i++) {
                 K1[i] = K[i];
-                K2[i] = K[this.EAS + i];
+                K2[i] = K[ctx.ECP.AESKEY + i];
             }
 
             M = this.AES_CBC_IV0_DECRYPT(K1, C);
