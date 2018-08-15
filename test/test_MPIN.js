@@ -26,7 +26,7 @@ var chai = require('chai');
 var expect = chai.expect;
 
 // Curves for consistency test
-var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
 
 // Curves for test with test vectors
 var tv_curves = ['BN254CX'];
@@ -50,13 +50,7 @@ pf_curves.forEach(function(curve) {
 
         var ctx = new CTX(curve),
             rng = new ctx.RAND(),
-            MPIN,
-
-            EAS = 16,
-            EGS, EFS,
-            G1S = 2 * EFS + 1,
-            G2S,
-
+            MPIN, EGS, EFS, G1S, G2S,
             S = [],
             SST = [],
             TOKEN = [],
@@ -90,10 +84,19 @@ pf_curves.forEach(function(curve) {
             pin2 = 2345,
             CLIENT_ID, date;
 
+        if (ctx.ECP.CURVE_PAIRING_TYPE === 1 | ctx.ECP.CURVE_PAIRING_TYPE === 2) {
             MPIN = ctx.MPIN;
-            G2S = 4 * EFS;
+            G2S = 4 * MPIN.EFS;
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 3) {
+            MPIN = ctx.MPIN192;
+            G2S = 8 * MPIN.EFS;
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 4) {
+            MPIN = ctx.MPIN256;
+            G2S = 16 * MPIN.EFS;
+        }
         EGS = MPIN.EGS;
         EFS = MPIN.EFS;
+        G1S = 2 * EFS + 1;
 
         before(function(done) {
             this.timeout(0);
@@ -333,6 +336,7 @@ pf_curves.forEach(function(curve) {
         });
 
         if (tv_curves.indexOf(curve) != -1) {
+
             var vectors = require('../testVectors/mpin/MPIN_' + curve + '.json');
             var sha = ctx.ECP.HASH_TYPE;
             var CS = [];

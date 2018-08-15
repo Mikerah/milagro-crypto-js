@@ -23,7 +23,7 @@ var chai = require('chai');
 
 var CTX = require("../index");
 
-pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
+pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
 
 var expect = chai.expect;
 
@@ -33,10 +33,10 @@ pf_curves.forEach(function(curve) {
 
     describe('TEST DVS ' + curve, function() {
 
-        var rng = new ctx.RAND();
-        var sha = ctx.ECP.HASH_TYPE;
-
-        var pin = 1234,
+        var rng = new ctx.RAND(),
+            sha = ctx.ECP.HASH_TYPE,
+            MPIN, EGS, EFS, G1S, G2S,
+            pin = 1234,
             pin2 = 2345,
             IDstr = "testuser@miracl.com",
             message = "Message to sign",
@@ -51,41 +51,52 @@ pf_curves.forEach(function(curve) {
             Z = [],
             Pa = [],
             U = [],
-            CLIENT_ID, rtn, date, timeValue;
+            RAW = [],
+            CLIENT_ID, rtn, date, timeValue, i;
+
+        if (ctx.ECP.CURVE_PAIRING_TYPE === 1 | ctx.ECP.CURVE_PAIRING_TYPE === 2) {
+            MPIN = ctx.MPIN;
+            G2S = 4 * MPIN.EFS;
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 3) {
+            MPIN = ctx.MPIN192;
+            G2S = 8 * MPIN.EFS;
+        }
+        EGS = MPIN.EGS;
+        EFS = MPIN.EFS;
+        G1S = 2 * EFS + 1;
 
         before(function(done) {
             this.timeout(0);
 
-            var RAW = [];
             rng.clean();
             for (i = 0; i < 100; i++) RAW[i] = i;
             rng.seed(100, RAW);
 
             /* Trusted Authority set-up */
-            ctx.MPIN.RANDOM_GENERATE(rng, S);
+            MPIN.RANDOM_GENERATE(rng, S);
 
             /* Create Client Identity */
-            CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
+            CLIENT_ID = MPIN.stringtobytes(IDstr);
 
             /* Generate ctx.RANDom public key and z */
-            ctx.MPIN.GET_DVS_KEYPAIR(rng, Z, Pa);
+            MPIN.GET_DVS_KEYPAIR(rng, Z, Pa);
 
             /* Append Pa to ID */
-            for (var i = 0; i < Pa.length; i++)
+            for (i = 0; i < Pa.length; i++)
                 CLIENT_ID.push(Pa[i]);
 
             /* Hash Client ID */
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID);
+            HCID = MPIN.HASH_ID(sha, CLIENT_ID);
 
             /* Client and Server are issued secrets by DTA */
-            ctx.MPIN.GET_SERVER_SECRET(S, SST);
-            ctx.MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
+            MPIN.GET_SERVER_SECRET(S, SST);
+            MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
 
             /* Compute client secret for key escrow less scheme z.CS */
-            ctx.MPIN.GET_G1_MULTIPLE(null, 0, Z, TOKEN, TOKEN);
+            MPIN.GET_G1_MULTIPLE(null, 0, Z, TOKEN, TOKEN);
 
             /* Client extracts PIN from secret to create Token */
-            ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
+            MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
 
             done();
         });
@@ -94,13 +105,13 @@ pf_curves.forEach(function(curve) {
             this.timeout(0);
 
             date = 0;
-            timeValue = ctx.MPIN.GET_TIME();
+            timeValue = MPIN.GET_TIME();
 
-            rtn = ctx.MPIN.CLIENT(sha, 0, CLIENT_ID, rng, X, pin, TOKEN, SEC, U, null, null, timeValue, Y1, message);
+            rtn = MPIN.CLIENT(sha, 0, CLIENT_ID, rng, X, pin, TOKEN, SEC, U, null, null, timeValue, Y1, message);
             expect(rtn).to.be.equal(0);
 
             /* Server  */
-            rtn = ctx.MPIN.SERVER(sha, 0, xID, null, Y2, SST, U, null, SEC, null, null, CLIENT_ID, timeValue, message, Pa);
+            rtn = MPIN.SERVER(sha, 0, xID, null, Y2, SST, U, null, SEC, null, null, CLIENT_ID, timeValue, message, Pa);
             expect(rtn).to.be.equal(0);
             done();
         });
@@ -109,14 +120,14 @@ pf_curves.forEach(function(curve) {
             this.timeout(0);
 
             date = 0;
-            timeValue = ctx.MPIN.GET_TIME();
+            timeValue = MPIN.GET_TIME();
 
-            rtn = ctx.MPIN.CLIENT(sha, 0, CLIENT_ID, rng, X, pin2, TOKEN, SEC, U, null, null, timeValue, Y1, message);
+            rtn = MPIN.CLIENT(sha, 0, CLIENT_ID, rng, X, pin2, TOKEN, SEC, U, null, null, timeValue, Y1, message);
             expect(rtn).to.be.equal(0);
 
             /* Server  */
-            rtn = ctx.MPIN.SERVER(sha, 0, xID, null, Y2, SST, U, null, SEC, null, null, CLIENT_ID, timeValue, message, Pa);
-            expect(rtn).to.be.equal(ctx.MPIN.BAD_PIN);
+            rtn = MPIN.SERVER(sha, 0, xID, null, Y2, SST, U, null, SEC, null, null, CLIENT_ID, timeValue, message, Pa);
+            expect(rtn).to.be.equal(MPIN.BAD_PIN);
             done();
         });
     });
