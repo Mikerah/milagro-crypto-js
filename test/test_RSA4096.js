@@ -28,7 +28,7 @@ describe('TEST RSA RSA4096', function() {
 
     var ctx = new CTX('RSA4096');
 
-        // Load test vectors
+    // Load test vectors
     var vectors = require('../testVectors/rsa/RSA4096.json');
     var i, j = 0,
         res;

@@ -26,7 +26,7 @@ var chai = require('chai');
 var expect = chai.expect;
 
 // Curves for consistency test
-var pf_curves = ['BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
 
 // Curves for test with test vectors
 var tv_curves = ['BN254CX'];

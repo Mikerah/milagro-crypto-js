@@ -246,10 +246,6 @@ var ECP2 = function(ctx) {
         frob: function(X) {
             var X2;
 
-            if (this.INF) {
-                return;
-            }
-
             X2 = new ctx.FP2(X);
             X2.sqr();
             this.x.conj();

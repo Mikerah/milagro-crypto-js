@@ -25,6 +25,7 @@ var ROM_FIELD_25519,
     ROM_FIELD_512PM,
     ROM_FIELD_ANSSI,
     ROM_FIELD_BLS383,
+    ROM_FIELD_BLS381,
     ROM_FIELD_BLS461,
     ROM_FIELD_FP256BN,
     ROM_FIELD_FP512BN,
@@ -36,7 +37,8 @@ var ROM_FIELD_25519,
     ROM_FIELD_HIFIVE,
     ROM_FIELD_NIST256,
     ROM_FIELD_NIST384,
-    ROM_FIELD_NIST521;
+    ROM_FIELD_NIST521,
+    ROM_FIELD_SECP256K1;
 
 ROM_FIELD_25519 = function() {
     "use strict";
@@ -135,6 +137,27 @@ ROM_FIELD_BLS383 = function() {
 
     return ROM_FIELD_BLS383;
 };
+
+ROM_FIELD_BLS381 = function() {
+    "use strict";
+    /* Fixed Data in ROM - Field and Curve parameters */
+
+    var ROM_FIELD_BLS381 = {
+
+        // BLS381 Modulus
+        // Base Bits= 23
+
+        Modulus: [0x7FAAAB,0x7FFFFF,0x7EE7FB,0xA9FFF,0x3FFFEB,0x4483D5,0x3DAC3D,0x186950,0x12BF67,0x9E70A,0x11DD2E,0x5D66BB,0x7B6434,0x496374,0x5FF9A6,0x8F51C,0x1A01],
+        R2modp: [0x40C6E6,0xE1A28,0x3D1C6C,0x6D2448,0x1BB111,0x4EAFA8,0x229C8C,0x4CEE55,0x46D2AD,0x7BA87C,0x708835,0x2413D1,0x6702E3,0x390116,0xD9E3F,0x4BD65C,0x9A3],
+        MConst: 0x7CFFFD,
+        Fra: [0x235FB8,0x6BDB24,0x76341D,0x1F3C09,0x6A53D6,0x389ECF,0x612EAE,0x1221EB,0x5F4F7B,0x7A797A,0x3F580F,0x6068F8,0x6B4202,0x784637,0x2EC199,0x69DF81,0x1904],
+        Frb: [0x5C4AF3,0x1424DB,0x8B3DE,0x6B63F6,0x55AC14,0xBE505,0x5C7D8F,0x64764,0x336FEC,0xF6D8F,0x52851E,0x7CFDC2,0x102231,0x511D3D,0x31380C,0x1F159B,0xFC],
+
+    };
+
+    return ROM_FIELD_BLS381;
+};
+
 
 ROM_FIELD_BLS461 = function() {
     "use strict";
@@ -341,6 +364,22 @@ ROM_FIELD_NIST521 = function() {
     return ROM_FIELD_NIST521;
 };
 
+
+ROM_FIELD_SECP256K1 = function() {
+    "use strict";
+    /* Fixed Data in ROM - Field and Curve parameters */
+
+    var ROM_FIELD_SECP256K1 = {
+
+        // SECP256K1 modulus
+        // Base Bits= 24
+        Modulus: [0xFFFC2F,0xFFFEFF,0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFF],
+        R2modp: [0xA10000,0xE90,0x7A2,0x100,0x0,0x0,0x0,0x0,0x0,0x0,0x0],
+        MConst: 0x253531,
+    };
+    return ROM_FIELD_SECP256K1;
+};
+
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
     module.exports = {
         ROM_FIELD_25519: ROM_FIELD_25519,
@@ -349,6 +388,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
         ROM_FIELD_512PM: ROM_FIELD_512PM,
         ROM_FIELD_ANSSI: ROM_FIELD_ANSSI,
         ROM_FIELD_BLS383: ROM_FIELD_BLS383,
+        ROM_FIELD_BLS381: ROM_FIELD_BLS381,
         ROM_FIELD_BLS461: ROM_FIELD_BLS461,
         ROM_FIELD_FP256BN: ROM_FIELD_FP256BN,
         ROM_FIELD_FP512BN: ROM_FIELD_FP512BN,
@@ -361,5 +401,6 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
         ROM_FIELD_NIST256: ROM_FIELD_NIST256,
         ROM_FIELD_NIST384: ROM_FIELD_NIST384,
         ROM_FIELD_NIST521: ROM_FIELD_NIST521,
+        ROM_FIELD_SECP256K1: ROM_FIELD_SECP256K1
     };
 }

@@ -26,7 +26,7 @@ var CTX = require("../index");
 
 var expect = chai.expect;
 
-var pf_curves = ['BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
 
 var readBIG = function(string, ctx) {
     while (string.length != ctx.BIG.MODBYTES*2){string = "00"+string;}
