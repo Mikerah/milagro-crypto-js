@@ -34,7 +34,7 @@ pf_curves.forEach(function(curve) {
     describe('TEST DVS ' + curve, function() {
 
         var rng = new ctx.RAND();
-        var sha = ctx.MPIN.HASH_TYPE;
+        var sha = ctx.ECP.HASH_TYPE;
 
         var pin = 1234,
             pin2 = 2345,

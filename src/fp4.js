@@ -60,6 +60,12 @@ var FP4 = function(ctx) {
             return (this.a.equals(one) && this.b.iszilch());
         },
 
+        /* conditional copy of g to this depending on d */
+        cmove: function(g, d) {
+            this.a.cmove(g.a, d);
+            this.b.cmove(g.b, d);
+        },
+
         /* test is w real? That is in a+ib test b is zero */
         isreal: function() {
             return this.b.iszilch();
@@ -116,7 +122,8 @@ var FP4 = function(ctx) {
 
         /* this=-this */
         neg: function() {
-            var m = new ctx.FP2(this.a), //m.copy(this.a);
+            this.norm();
+            var m = new ctx.FP2(this.a),
                 t = new ctx.FP2(0);
 
             m.add(this.b);
@@ -152,6 +159,11 @@ var FP4 = function(ctx) {
             var m = new FP4(x);
             m.neg();
             this.add(m);
+        },
+
+        rsub: function(x) {
+            this.neg();
+            this.add(x);
         },
 
         /* this*=s where s is FP2 */

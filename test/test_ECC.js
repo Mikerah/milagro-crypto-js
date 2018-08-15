@@ -37,7 +37,7 @@ all_curves.forEach(function(curve) {
     describe('TEST ECC ' + curve, function() {
 
         var pp = "M0ng00se",
-            sha = ctx.ECDH.HASH_TYPE,
+            sha = ctx.ECP.HASH_TYPE,
             S1 = [],
             W0 = [],
             W1 = [],

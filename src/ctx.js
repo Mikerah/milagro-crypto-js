@@ -17,7 +17,6 @@
     under the License.
 */
 
-
 var CTX = function(input_parameter) {
     "use strict";
 
@@ -36,6 +35,8 @@ var CTX = function(input_parameter) {
      *  PF   : Pairing Friendly
      *  ST   : Sextic Twist Type
      *  SX   : Sign of x parameter
+     *  HT   : Hash output size
+     *  AK   : AES key size
      */
 
     CTXLIST = {
@@ -51,7 +52,9 @@ var CTX = function(input_parameter) {
             "@CT": 1,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "C25519": {
@@ -66,7 +69,9 @@ var CTX = function(input_parameter) {
             "@CT": 2,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "NIST256": {
@@ -81,7 +86,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "NIST384": {
@@ -96,7 +103,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 48,
+            "@AK": 24
         },
 
         "BRAINPOOL": {
@@ -111,7 +120,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "ANSSI": {
@@ -126,7 +137,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "HIFIVE": {
@@ -141,7 +154,9 @@ var CTX = function(input_parameter) {
             "@CT": 1,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 48,
+            "@AK": 24
         },
 
         "GOLDILOCKS": {
@@ -156,7 +171,9 @@ var CTX = function(input_parameter) {
             "@CT": 1,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 64,
+            "@AK": 32
         },
 
         "C41417": {
@@ -171,7 +188,9 @@ var CTX = function(input_parameter) {
             "@CT": 1,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 64,
+            "@AK": 32
         },
 
         "NIST521": {
@@ -186,7 +205,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 64,
+            "@AK": 32
         },
 
         "NUMS256W": {
@@ -201,7 +222,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "NUMS256E": {
@@ -216,7 +239,9 @@ var CTX = function(input_parameter) {
             "@CT": 1,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "NUMS384W": {
@@ -231,7 +256,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 48,
+            "@AK": 24
         },
 
         "NUMS384E": {
@@ -246,7 +273,9 @@ var CTX = function(input_parameter) {
             "@CT": 1,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 48,
+            "@AK": 24
         },
 
         "NUMS512W": {
@@ -261,7 +290,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 64,
+            "@AK": 32
         },
 
         "NUMS512E": {
@@ -276,7 +307,9 @@ var CTX = function(input_parameter) {
             "@CT": 1,
             "@PF": 0,
             "@ST": 0,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 64,
+            "@AK": 32
         },
 
         "FP256BN": {
@@ -291,7 +324,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 1,
             "@ST": 1,
-            "@SX": 1
+            "@SX": 1,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "FP512BN": {
@@ -306,7 +341,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 1,
             "@ST": 1,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "BN254": {
@@ -321,7 +358,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 1,
             "@ST": 0,
-            "@SX": 1
+            "@SX": 1,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "BN254CX": {
@@ -336,7 +375,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 1,
             "@ST": 0,
-            "@SX": 1
+            "@SX": 1,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "BLS383": {
@@ -351,7 +392,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 2,
             "@ST": 1,
-            "@SX": 0
+            "@SX": 0,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "BLS461": {
@@ -366,7 +409,9 @@ var CTX = function(input_parameter) {
             "@CT": 0,
             "@PF": 2,
             "@ST": 1,
-            "@SX": 1
+            "@SX": 1,
+            "@HT": 32,
+            "@AK": 16
         },
 
         "RSA2048": {
@@ -442,6 +487,7 @@ var CTX = function(input_parameter) {
     // Set Elliptic Curve parameters
     if (typeof ctx.config["CURVE"] !== "undefined") {
         prepareModule("ROM_CURVE_" + ctx.config["CURVE"], "rom_curve", "ROM_CURVE");
+
         prepareModule("ROM_FIELD_" + ctx.config["FIELD"], "rom_field", "ROM_FIELD");
 
         prepareModule("FP");

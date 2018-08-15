@@ -83,7 +83,7 @@ pf_curves.forEach(function(curve) {
 
             HSID = [],
 
-            sha = ctx.MPIN.HASH_TYPE,
+            sha = ctx.ECP.HASH_TYPE,
 
             IDstr = "testUser@miracl.com",
             pin = 1234,
@@ -333,9 +333,8 @@ pf_curves.forEach(function(curve) {
         });
 
         if (tv_curves.indexOf(curve) != -1) {
-
             var vectors = require('../testVectors/mpin/MPIN_' + curve + '.json');
-            var sha = ctx.MPIN.HASH_TYPE;
+            var sha = ctx.ECP.HASH_TYPE;
             var CS = [];
             var TP = [];
             var TP1bytes = [];
