@@ -23,7 +23,7 @@ var chai = require('chai');
 
 var CTX = require("../index");
 
-pf_curves = ['BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
+pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
 
 var expect = chai.expect;
 
@@ -75,7 +75,6 @@ pf_curves.forEach(function(curve) {
                 CLIENT_ID.push(Pa[i]);
 
             /* Hash Client ID */
-
             HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID);
 
             /* Client and Server are issued secrets by DTA */
