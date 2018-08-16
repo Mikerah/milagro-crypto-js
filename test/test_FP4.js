@@ -190,6 +190,39 @@ describe('TEST FP4 ARITHMETIC', function() {
                 var BIGsc2 = readBIG(vector.BIGsc2, ctx);
                 a1 = fp121.xtr_pow2(fp122,fp123,fp124,BIGsc2,BIGsc1);
                 expect(a1.toString()).to.equal(fp4xtrpow2.toString());
+
+                if (ctx.ECP.AESKEY > 16) {
+                    // Test division by 2
+                    var fp4div2 = readFP4(vector.FP4div2, ctx);
+                    a1.copy(fp41);
+                    a1.div2();
+                    expect(a1.toString()).to.equal(fp4div2.toString());
+
+                    // Test division by i
+                    var fp4divi = readFP4(vector.FP4divi, ctx);
+                    a1.copy(fp41);
+                    a1.div_i();
+                    expect(a1.toString()).to.equal(fp4divi.toString())
+
+                    // Test division by 2i
+                    var fp4div2i = readFP4(vector.FP4div2i, ctx);
+                    a1.copy(fp41);
+                    a1.div_2i();
+                    expect(a1.toString()).to.equal(fp4div2i.toString())
+
+                    // Test square root
+                    var fp4sqrt = readFP4(vector.FP4sqrt, ctx);
+                    a1.copy(fp41);
+                    expect(a1.sqrt()).to.equal(true);
+                    expect(a1).to.satisfy(function(p) {
+                        if(fp4sqrt.toString() === p.toString()) {
+                            return true;
+                        } else {
+                            fp4sqrt.neg();
+                        }
+                        return fp4sqrt.toString() === p.toString();
+                    });
+                }
             });
             done();
         });
