@@ -169,10 +169,7 @@ pf_curves.forEach(function(curve) {
 
             expect(g1s.toString()).to.be.equal(gs1.toString());
 
-            gs1 = PAIR.ate(Q1, G1);
-            gs1 = PAIR.fexp(gs1);
-            gs1 = PAIR.GTpow(gs1,s);
-
+            gs1 = PAIR.GTpow(g11,s);
             expect(g1s.toString()).to.be.equal(gs1.toString());
 
             done();

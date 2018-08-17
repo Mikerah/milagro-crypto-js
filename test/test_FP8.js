@@ -83,12 +83,13 @@ describe('TEST FP8 ARITHMETIC', function() {
 
             var ctx = new CTX(curve);
             var vectors = require('../testVectors/fp8/'+curve+'.json');
-            
-            var one = new ctx.FP8(1);
-            var zero = new ctx.FP8(0);
 
-            var fp4one = new ctx.FP4(1);
-            var fp4zero = new ctx.FP4(0);
+            var a1 = new ctx.FP8(0),
+                a2 = new ctx.FP8(0),
+                one = new ctx.FP8(1),
+                zero = new ctx.FP8(0),
+                fp4one = new ctx.FP4(1),
+                fp4zero = new ctx.FP4(0);
 
             // Test iszilch and isunity
             expect(zero.iszilch()).to.be.true;
@@ -107,7 +108,15 @@ describe('TEST FP8 ARITHMETIC', function() {
             one.set(fp4one,fp4zero);
             expect(one.isunity()).to.be.true;
             one.seta(fp4one);
-            expect(one.isunity()).to.be.true;            
+            expect(one.isunity()).to.be.true;
+
+            // Test handling sqrt 0,1
+            a1.zero();
+            expect(a1.sqrt()).to.be.true;
+            expect(a1.toString()).to.equal(zero.toString());
+            a1.one();
+            expect(a1.sqrt()).to.be.true;
+            expect(a1.toString()).to.equal(one.toString());
 
             var i=0;
             vectors.forEach(function(vector){
@@ -117,8 +126,6 @@ describe('TEST FP8 ARITHMETIC', function() {
                 var fp82 = readFP8(vector.FP82,ctx);
                 var fp8add = readFP8(vector.FP8add,ctx);
 
-                var a1 = new ctx.FP8(0);
-                var a2 = new ctx.FP8(0);
                 a1.copy(fp81);
                 a2.copy(fp82);
                 a1.add(a2);

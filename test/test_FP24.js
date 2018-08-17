@@ -204,7 +204,7 @@ describe('TEST FP24 ARITHMETIC', function() {
                 // test pow8
                 var fp24pow8 = readFP24(vector.FP24pow8, ctx);
                 a1 = ctx.FP24.pow8(fp24frobs,BIGsc);
-                //expect(a1.toString()).to.equal(fp24pow8.toString());
+                expect(a1.toString()).to.equal(fp24pow8.toString());
 
                 // test frobenius
                 var fp24frob = readFP24(vector.FP24frob, ctx);

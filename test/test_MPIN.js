@@ -51,9 +51,18 @@ pf_curves.forEach(function(curve) {
         var ctx = new CTX(curve),
             rng = new ctx.RAND(),
             MPIN, EGS, EFS, G1S, G2S,
-            S = [],
+            S1 = [],
+            S2 = [],
+            SST1 = [],
+            SST2 = [],
+            TOKEN1 = [],
+            TOKEN2 = [],
+            PERMIT1 = [],
+            PERMIT2 = [],
             SST = [],
             TOKEN = [],
+            bakSECRET = [],
+            SECRET = [],
             PERMIT = [],
             SEC = [],
             xID = [],
@@ -106,22 +115,47 @@ pf_curves.forEach(function(curve) {
             for (var j = 0; j < 100; j++) RAW[j] = j;
             rng.seed(100, RAW);
 
-            /* Trusted Authority set-up */
-            MPIN.RANDOM_GENERATE(rng, S);
+            /* Trusted Authorities set-up */
+            MPIN.RANDOM_GENERATE(rng, S1);
+            MPIN.RANDOM_GENERATE(rng, S2);
 
             /* Create Client Identity */
             CLIENT_ID = MPIN.stringtobytes(IDstr);
             HCID = MPIN.HASH_ID(sha, CLIENT_ID); /* Either Client or TA calculates Hash(ID) - you decide! */
 
-            /* Client and Server are issued secrets by DTA */
-            MPIN.GET_SERVER_SECRET(S, SST);
-            MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
+            /* Client and Server are issued secrets by the DTAs */
+            MPIN.GET_SERVER_SECRET(S1, SST1);
+            MPIN.GET_SERVER_SECRET(S2, SST2);
+            MPIN.RECOMBINE_G2(SST1, SST2, SST);
 
+            MPIN.GET_CLIENT_SECRET(S1, HCID, TOKEN1);
+            MPIN.GET_CLIENT_SECRET(S2, HCID, TOKEN2);
+            MPIN.RECOMBINE_G1(TOKEN1, TOKEN2, TOKEN);
+
+            SECRET = TOKEN.slice();
             MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
             MPIN.PRECOMPUTE(TOKEN, HCID, G1, G2);
 
+            /* Client gets "Time Token" permit from DTA */
+            date = MPIN.today();
+            MPIN.GET_CLIENT_PERMIT(sha, date, S1, HCID, PERMIT1);
+            MPIN.GET_CLIENT_PERMIT(sha, date, S2, HCID, PERMIT2);
+            MPIN.RECOMBINE_G1(PERMIT1,PERMIT2,PERMIT);
+
+            /* This encoding makes Time permit look random - Elligator squared */
+            MPIN.ENCODING(rng, PERMIT);
+            MPIN.DECODING(PERMIT);
+
             done();
         });
+
+        it('test extract/restore factors', function(done) {
+            bakSECRET = SECRET.slice();
+            MPIN.EXTRACT_FACTOR(sha, CLIENT_ID, pin%MPIN.MAXPIN,MPIN.PBLEN,SECRET);
+            MPIN.RESTORE_FACTOR(sha, CLIENT_ID, pin%MPIN.MAXPIN,MPIN.PBLEN,SECRET);
+            expect(MPIN.comparebytes(SECRET,bakSECRET)).to.be.true;
+            done();
+        })
 
         it('test MPin', function(done) {
             this.timeout(0);
@@ -129,7 +163,6 @@ pf_curves.forEach(function(curve) {
             date = 0;
             var pxID = xID,
                 pHID = HID,
-                prHID = pHID;
 
             rtn = MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, null, null);
             expect(rtn).to.be.equal(0);
@@ -155,18 +188,10 @@ pf_curves.forEach(function(curve) {
             this.timeout(0);
 
             date = MPIN.today();
-            /* Client gets "Time Token" permit from DTA */
-            MPIN.GET_CLIENT_PERMIT(sha, date, S, HCID, PERMIT);
-
-            /* This encoding makes Time permit look random - Elligator squared */
-            MPIN.ENCODING(rng, PERMIT);
-            MPIN.DECODING(PERMIT);
-
             var pxCID = xCID;
             var pHID = HID;
             var pHTID = HTID;
             var pPERMIT = PERMIT;
-            var prHID = pHTID;
             var pxID = null;
 
             rtn = MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT);
@@ -194,8 +219,6 @@ pf_curves.forEach(function(curve) {
         it('test MPin Full One Pass', function(done) {
             this.timeout(0);
 
-            MPIN.PRECOMPUTE(TOKEN, HCID, G1, G2);
-
             date = 0;
 
             var pxID = xID;
@@ -212,7 +235,6 @@ pf_curves.forEach(function(curve) {
             rtn = MPIN.CLIENT(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT, timeValue, Y);
             expect(rtn).to.be.equal(0);
 
-            HCID = MPIN.HASH_ID(sha, CLIENT_ID);
             MPIN.GET_G1_MULTIPLE(rng, 1, R, HCID, Z); /* Also Send Z=r.ID to Server, remember random r */
 
             rtn = MPIN.SERVER(sha, date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, pE, pF, CLIENT_ID, timeValue);
@@ -270,17 +292,7 @@ pf_curves.forEach(function(curve) {
             this.timeout(0);
 
             /* Set configuration */
-            var PERMITS = true;
-
-            if (PERMITS) {
-                date = MPIN.today();
-                /* Client gets "Time Token" permit from DTA */
-                MPIN.GET_CLIENT_PERMIT(sha, date, S, HCID, PERMIT);
-
-                /* This encoding makes Time permit look random - Elligator squared */
-                MPIN.ENCODING(rng, PERMIT);
-                MPIN.DECODING(PERMIT);
-            } else date = 0;
+            date = MPIN.today();
 
             var pxID = xID;
             var pxCID = xCID;
