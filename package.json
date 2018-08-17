@@ -1,6 +1,6 @@
 {
   "name": "milagro-crypto-js",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "Crypto Library in Javascript - Refact of Apache Milagro Crypto Library",
   "main": "index.js",
   "directories": {
