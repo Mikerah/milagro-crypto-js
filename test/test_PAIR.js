@@ -25,7 +25,7 @@ var chai = require('chai');
 
 var expect = chai.expect;
 
-var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
 
 pf_curves.forEach(function(curve) {
 
@@ -41,19 +41,6 @@ pf_curves.forEach(function(curve) {
         var G = new ctx.ECP(0);
         var G1 = new ctx.ECP(0);
         var G2 = new ctx.ECP(0);
-        var G3 = new ctx.ECP(0);
-
-        var Q = new ctx.ECP2(0);
-        var Q1 = new ctx.ECP2(0);
-        var Q2 = new ctx.ECP2(0);
-        var Q3 = new ctx.ECP2(0);
-
-        var g1 = new ctx.FP12(0);
-        var g2 = new ctx.FP12(0);
-        var g3 = new ctx.FP12(0);
-
-        var qx = new ctx.FP2(0);
-        var qy = new ctx.FP2(0);
         var Gaux = new ctx.ECP(0);
 
         // Set curve order
@@ -64,36 +51,76 @@ pf_curves.forEach(function(curve) {
         y.rcopy(ctx.ROM_CURVE.CURVE_Gy);
         G.setxy(x,y);
 
-        var Q = new ctx.ECP2(0);
-        var Q1 = new ctx.ECP2(0);
-        var Q2 = new ctx.ECP2(0);
-        var Qaux = new ctx.ECP2(0);
+        if (ctx.ECP.CURVE_PAIRING_TYPE === 1 | ctx.ECP.CURVE_PAIRING_TYPE === 2) {
+            var Q = new ctx.ECP2(0);
+            var Q1 = new ctx.ECP2(0);
+            var Q2 = new ctx.ECP2(0);
+            var Qaux = new ctx.ECP2(0);
 
-        var g11 = new ctx.FP12(0);
-        var g12 = new ctx.FP12(0);
-        var g21 = new ctx.FP12(0);
-        var g22 = new ctx.FP12(0);
-        var g1s = new ctx.FP12(0);
-        var gs1 = new ctx.FP12(0);
-        var aux1 = new ctx.FP12(0);
-        var aux2 = new ctx.FP12(0);
+            var g11 = new ctx.FP12(0);
+            var g12 = new ctx.FP12(0);
+            var g21 = new ctx.FP12(0);
+            var g22 = new ctx.FP12(0);
+            var g1s = new ctx.FP12(0);
+            var gs1 = new ctx.FP12(0);
+            var aux1 = new ctx.FP12(0);
+            var aux2 = new ctx.FP12(0);
 
-        var qx = new ctx.FP2(0);
-        var qy = new ctx.FP2(0);
+            var qx = new ctx.FP2(0);
+            var qy = new ctx.FP2(0);
 
-        // Set pairing interface
-        var PAIR = ctx.PAIR;
+            // Set pairing interface
+            var PAIR = ctx.PAIR;
 
-        // Set generator of G2
-        x.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
-        y.rcopy(ctx.ROM_CURVE.CURVE_Pxb);
-        qx.bset(x, y);
-        x.rcopy(ctx.ROM_CURVE.CURVE_Pya);
-        y.rcopy(ctx.ROM_CURVE.CURVE_Pyb);
-        qy.bset(x, y);
-        Q.setxy(qx, qy);
+            // Set generator of G2
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxb);
+            qx.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pya);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pyb);
+            qy.bset(x, y);
+            Q.setxy(qx, qy);
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 3) {
+            var Q = new ctx.ECP4(0);
+            var Q1 = new ctx.ECP4(0);
+            var Q2 = new ctx.ECP4(0);
+            var Qaux = new ctx.ECP4(0);
 
+            var g11 = new ctx.FP24(0);
+            var g22 = new ctx.FP24(0);
+            var g1s = new ctx.FP24(0);
+            var gs1 = new ctx.FP24(0);
+            var aux1 = new ctx.FP24(0);
+            var aux2 = new ctx.FP24(0);
 
+            var qca = new ctx.FP2(0);
+            var qcb = new ctx.FP2(0);
+
+            var qx = new ctx.FP4(0);
+            var qy = new ctx.FP4(0);
+
+            // Set pairing interface
+            var PAIR = ctx.PAIR192;
+
+            // Set generator of G2
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxaa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxab);
+            qca.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pxba);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pxbb);
+            qcb.bset(x, y);
+            qx.set(qca,qcb);
+
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pyaa);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pyab);
+            qca.bset(x, y);
+            x.rcopy(ctx.ROM_CURVE.CURVE_Pyba);
+            y.rcopy(ctx.ROM_CURVE.CURVE_Pybb);
+            qcb.bset(x, y);
+            qy.set(qca,qcb);
+
+            Q.setxy(qx, qy);
+        }
 
         before(function(done) {
             this.timeout(0);
@@ -121,10 +148,13 @@ pf_curves.forEach(function(curve) {
             g22 = PAIR.ate(Q2, G2);
             g22 = PAIR.fexp(g22);
 
-            g12 = PAIR.ate(Q1, G2);
-            g12 = PAIR.fexp(g12);
-            g21 = PAIR.ate(Q2, G1);
-            g21 = PAIR.fexp(g21);
+            if (ctx.ECP.CURVE_PAIRING_TYPE === 1 || ctx.ECP.CURVE_PAIRING_TYPE === 2) {
+                g12 = PAIR.ate(Q1, G2);
+                g12 = PAIR.fexp(g12);
+                g21 = PAIR.ate(Q2, G1);
+                g21 = PAIR.fexp(g21);
+            }
+
             done();
         });
 
@@ -139,10 +169,7 @@ pf_curves.forEach(function(curve) {
 
             expect(g1s.toString()).to.be.equal(gs1.toString());
 
-            gs1 = PAIR.ate(Q1, G1);
-            gs1 = PAIR.fexp(gs1);
-            gs1 = PAIR.GTpow(gs1,s);
-
+            gs1 = PAIR.GTpow(g11,s);
             expect(g1s.toString()).to.be.equal(gs1.toString());
 
             done();

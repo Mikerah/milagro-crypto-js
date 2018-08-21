@@ -26,7 +26,7 @@ var CTX = require("../index");
 
 var expect = chai.expect;
 
-var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
 
 var readBIG = function(string, ctx) {
     while (string.length != ctx.BIG.MODBYTES*2){string = "00"+string;}
@@ -68,6 +68,40 @@ describe('TEST FP4 ARITHMETIC', function() {
             var vectors = require('../testVectors/fp4/'+curve+'.json');
             var i=0;
 
+            var a1 = new ctx.FP4(1),
+                a2 = new ctx.FP4(0),
+                one = new ctx.FP4(1),
+                zero = new ctx.FP4(0),
+                fp2one = new ctx.FP2(1),
+                fp2zero = new ctx.FP2(0);
+
+            // Test iszilch and isunity
+            expect(zero.iszilch()).to.be.true;
+            expect(one.iszilch()).to.be.false;
+            expect(zero.isunity()).to.be.false;
+            expect(one.isunity()).to.be.true;
+
+            // Test real/isreal
+            expect(one.isreal()).to.be.true;
+            expect(one.real().toString()).to.be.equal(fp2one.toString());
+            one.times_i();
+            expect(one.isreal()).to.be.false;
+            expect(one.real().toString()).to.be.equal(fp2zero.toString());
+
+            // Test set using FP2
+            one.set(fp2one,fp2zero);
+            expect(one.isunity()).to.be.true;
+            one.seta(fp2one);
+            expect(one.isunity()).to.be.true;
+
+            // Test handling sqrt 0,1
+            a1.zero();
+            expect(a1.sqrt()).to.be.true;
+            expect(a1.toString()).to.equal(zero.toString());
+            a1.one();
+            expect(a1.sqrt()).to.be.true;
+            expect(a1.toString()).to.equal(one.toString());
+
             vectors.forEach(function(vector){
 
                 // test commutativity of addition
@@ -75,8 +109,6 @@ describe('TEST FP4 ARITHMETIC', function() {
                 var fp42 = readFP4(vector.FP42,ctx);
                 var fp4add = readFP4(vector.FP4add,ctx);
 
-                var a1 = new ctx.FP4(0);
-                var a2 = new ctx.FP4(0);
                 a1.copy(fp41);
                 a2.copy(fp42);
                 a1.add(a2);
@@ -190,6 +222,39 @@ describe('TEST FP4 ARITHMETIC', function() {
                 var BIGsc2 = readBIG(vector.BIGsc2, ctx);
                 a1 = fp121.xtr_pow2(fp122,fp123,fp124,BIGsc2,BIGsc1);
                 expect(a1.toString()).to.equal(fp4xtrpow2.toString());
+
+                if (ctx.ECP.AESKEY > 16) {
+                    // Test division by 2
+                    var fp4div2 = readFP4(vector.FP4div2, ctx);
+                    a1.copy(fp41);
+                    a1.div2();
+                    expect(a1.toString()).to.equal(fp4div2.toString());
+
+                    // Test division by i
+                    var fp4divi = readFP4(vector.FP4divi, ctx);
+                    a1.copy(fp41);
+                    a1.div_i();
+                    expect(a1.toString()).to.equal(fp4divi.toString())
+
+                    // Test division by 2i
+                    var fp4div2i = readFP4(vector.FP4div2i, ctx);
+                    a1.copy(fp41);
+                    a1.div_2i();
+                    expect(a1.toString()).to.equal(fp4div2i.toString())
+
+                    // Test square root
+                    var fp4sqrt = readFP4(vector.FP4sqrt, ctx);
+                    a1.copy(fp41);
+                    expect(a1.sqrt()).to.equal(true);
+                    expect(a1).to.satisfy(function(p) {
+                        if(fp4sqrt.toString() === p.toString()) {
+                            return true;
+                        } else {
+                            fp4sqrt.neg();
+                        }
+                        return fp4sqrt.toString() === p.toString();
+                    });
+                }
             });
             done();
         });
