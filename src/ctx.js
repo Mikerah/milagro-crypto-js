@@ -432,6 +432,23 @@ var CTX = function(input_parameter) {
             "@AK": 24
         },
 
+        "BLS48": {
+            "BITS": "560",
+            "FIELD": "BLS48",
+            "CURVE": "BLS48",
+            "@NB": 70,
+            "@BASE": 23,
+            "@NBT": 556,
+            "@M8": 3,
+            "@MT": 0,
+            "@CT": 0,
+            "@PF": 4,
+            "@ST": 1,
+            "@SX": 0,
+            "@HT": 64,
+            "@AK": 32
+        },
+
         "BLS381": {
             "BITS": "381",
             "FIELD": "BLS381",
@@ -563,6 +580,17 @@ var CTX = function(input_parameter) {
             prepareModule("ECP4");
             prepareModule("PAIR192");
             prepareModule("MPIN192");
+        }
+
+        if (ctx.config["@PF"] == 4) {
+            prepareModule("FP2");
+            prepareModule("FP4");
+            prepareModule("FP8");
+            prepareModule("FP16");
+            prepareModule("FP48");
+            prepareModule("ECP8");
+            prepareModule("PAIR256");
+            prepareModule("MPIN256");
         }
 
         return;
