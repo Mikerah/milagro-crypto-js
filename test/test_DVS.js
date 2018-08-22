@@ -23,7 +23,7 @@ var chai = require('chai');
 
 var CTX = require("../index");
 
-pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
+pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24', 'BLS48'];
 
 var expect = chai.expect;
 
@@ -60,6 +60,9 @@ pf_curves.forEach(function(curve) {
         } else if (ctx.ECP.CURVE_PAIRING_TYPE === 3) {
             MPIN = ctx.MPIN192;
             G2S = 8 * MPIN.EFS;
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 4) {
+            MPIN = ctx.MPIN256;
+            G2S = 16 * MPIN.EFS;
         }
         EGS = MPIN.EGS;
         EFS = MPIN.EFS;

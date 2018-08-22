@@ -26,7 +26,7 @@ var chai = require('chai');
 var expect = chai.expect;
 
 // Curves for consistency test
-var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24', 'BLS48'];
 
 // Curves for test with test vectors
 var tv_curves = ['BN254CX'];
@@ -72,6 +72,7 @@ pf_curves.forEach(function(curve) {
             E = [],
             F = [],
             HCID = [],
+            rHCID = [],
             HID = [],
             HTID = [],
 
@@ -83,8 +84,6 @@ pf_curves.forEach(function(curve) {
             T = [],
             CK = [],
             SK = [],
-
-            HSID = [],
 
             sha = ctx.ECP.HASH_TYPE,
 
@@ -122,6 +121,7 @@ pf_curves.forEach(function(curve) {
             /* Create Client Identity */
             CLIENT_ID = MPIN.stringtobytes(IDstr);
             HCID = MPIN.HASH_ID(sha, CLIENT_ID); /* Either Client or TA calculates Hash(ID) - you decide! */
+            ctx.ECP.mapit(HCID).toBytes(rHCID);
 
             /* Client and Server are issued secrets by the DTAs */
             MPIN.GET_SERVER_SECRET(S1, SST1);
@@ -157,21 +157,76 @@ pf_curves.forEach(function(curve) {
             done();
         })
 
-        it('test MPin', function(done) {
+        it('test MPin (Full) One Pass', function(done) {
             this.timeout(0);
 
             date = 0;
-            var pxID = xID,
-                pHID = HID,
+            CK = [];
+            SK = [];
 
-            rtn = MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, null, null);
+            var pxID = xID;
+            var pxCID = null;
+            var pHID = HID;
+            var pHTID = null;
+            var pE = null;
+            var pF = null;
+            var pPERMIT = null;
+            var prHID = HCID;
+
+            timeValue = MPIN.GET_TIME();
+
+            rtn = MPIN.CLIENT(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT, timeValue, Y);
+            expect(rtn).to.be.equal(0);
+
+            MPIN.GET_G1_MULTIPLE(rng, 1, R, prHID, Z); /* Also Send Z=r.ID to Server, remember random r */
+
+            rtn = MPIN.SERVER(sha, date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, pE, pF, CLIENT_ID, timeValue);
+            expect(rtn).to.be.equal(0);
+
+            MPIN.GET_G1_MULTIPLE(rng, 1, W, prHID, T); /* Also send T=w.ID to client, remember random w  */
+
+            H = MPIN.HASH_ALL(sha, prHID, pxID, pxCID, SEC, Y, Z, T);
+            rtn = MPIN.CLIENT_KEY(sha, G1, G2, pin, R, X, H, T, CK);
+            expect(rtn).to.be.equal(0);
+
+            H = MPIN.HASH_ALL(sha, prHID, pxID, pxCID, SEC, Y, Z, T);
+            rtn = MPIN.SERVER_KEY(sha, Z, SST, W, H, pHID, pxID, pxCID, SK);
+            expect(rtn).to.be.equal(0);
+            expect(MPIN.bytestostring(CK)).to.be.equal(MPIN.bytestostring(SK));
+            done();
+        });
+
+        it('test MPin (Full) Two Pass', function(done) {
+            this.timeout(0);
+
+            /* Set configuration */
+            date = 0;
+            CK = [];
+            SK = [];
+
+            var pxID = xID;
+            var pxCID = null;
+            var pHID = HID;
+            var pHTID = null;
+            var pE = null;
+            var pF = null;
+            var pPERMIT = null;
+            var prHID = rHCID;
+
+            rtn = MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT);
+            expect(rtn).to.be.equal(0);
+
+            rtn = MPIN.GET_G1_MULTIPLE(rng, 0, R, prHID, Z); /* Also Send Z=r.ID to Server, remember random r */
             expect(rtn).to.be.equal(0);
 
             /* Server calculates H(ID) and H(T|H(ID)) (if time permits enabled), and maps them to points on the curve HID and HTID resp. */
-            MPIN.SERVER_1(sha, date, CLIENT_ID, pHID, null);
+            MPIN.SERVER_1(sha, date, CLIENT_ID, pHID, pHTID);
 
             /* Server generates Random number Y and sends it to Client */
             MPIN.RANDOM_GENERATE(rng, Y);
+
+            rtn = MPIN.GET_G1_MULTIPLE(rng, 0, W, prHID, T); /* Also send T=w.ID to client, remember random w  */
+            expect(rtn).to.be.equal(0);
 
             /* Client Second Pass: Inputs Client secret SEC, x and y. Outputs -(x+y)*SEC */
             rtn = MPIN.CLIENT_2(X, Y, SEC);
@@ -179,8 +234,18 @@ pf_curves.forEach(function(curve) {
 
             /* Server Second pass. Inputs hashed client id, random Y, -(x+y)*SEC, xID and xCID and Server secret SST. E and F help kangaroos to find error. */
             /* If PIN error not required, set E and F = NULL */
-            rtn = MPIN.SERVER_2(date, pHID, null, Y, SST, pxID, null, SEC, null, null);
+            rtn = MPIN.SERVER_2(date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, pE, pF);
             expect(rtn).to.be.equal(0);
+
+            H = MPIN.HASH_ALL(sha, prHID, pxID, pxCID, SEC, Y, Z, T);
+            rtn = MPIN.CLIENT_KEY(sha, G1, G2, pin, R, X, H, T, CK);
+            expect(rtn).to.be.equal(0);
+
+            H = MPIN.HASH_ALL(sha, prHID, pxID, pxCID, SEC, Y, Z, T);
+            MPIN.SERVER_KEY(sha, Z, SST, W, H, pHID, pxID, pxCID, SK);
+            expect(MPIN.bytestostring(CK)).to.be.equal(MPIN.bytestostring(SK));
+            expect(rtn).to.be.equal(0);
+
             done();
         });
 
@@ -188,11 +253,11 @@ pf_curves.forEach(function(curve) {
             this.timeout(0);
 
             date = MPIN.today();
+            var pxID = null;
             var pxCID = xCID;
             var pHID = HID;
             var pHTID = HTID;
             var pPERMIT = PERMIT;
-            var pxID = null;
 
             rtn = MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT);
             expect(rtn).to.be.equal(0);
@@ -216,61 +281,20 @@ pf_curves.forEach(function(curve) {
 
         });
 
-        it('test MPin Full One Pass', function(done) {
-            this.timeout(0);
-
-            date = 0;
-
-            var pxID = xID;
-            var pxCID = null;
-            var pHID = HID;
-            var pHTID = null;
-            var pE = null;
-            var pF = null;
-            var pPERMIT = null;
-            var prHID = pHID;
-
-            timeValue = MPIN.GET_TIME();
-
-            rtn = MPIN.CLIENT(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT, timeValue, Y);
-            expect(rtn).to.be.equal(0);
-
-            MPIN.GET_G1_MULTIPLE(rng, 1, R, HCID, Z); /* Also Send Z=r.ID to Server, remember random r */
-
-            rtn = MPIN.SERVER(sha, date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, pE, pF, CLIENT_ID, timeValue);
-            expect(rtn).to.be.equal(0);
-
-            HSID = MPIN.HASH_ID(sha, CLIENT_ID);
-            MPIN.GET_G1_MULTIPLE(rng, 0, W, prHID, T); /* Also send T=w.ID to client, remember random w  */
-
-            H = MPIN.HASH_ALL(sha, HCID, pxID, pxCID, SEC, Y, Z, T);
-            MPIN.CLIENT_KEY(sha, G1, G2, pin, R, X, H, T, CK);
-
-            H = MPIN.HASH_ALL(sha, HSID, pxID, pxCID, SEC, Y, Z, T);
-            MPIN.SERVER_KEY(sha, Z, SST, W, H, pHID, pxID, pxCID, SK);
-            expect(MPIN.bytestostring(CK)).to.be.equal(MPIN.bytestostring(SK));
-            done();
-        });
-
       	it('test MPin bad PIN', function(done) {
             this.timeout(0);
 
-            date = 0;
-
+            date = 0
             var pxID = xID;
             var pxCID = null;
             var pHID = HID;
             var pHTID = null;
             var pPERMIT = null;
-            var prHID = pHID;
 
             timeValue = MPIN.GET_TIME();
 
             rtn = MPIN.CLIENT(sha, date, CLIENT_ID, rng, X, pin2, TOKEN, SEC, pxID, pxCID, pPERMIT, timeValue, Y);
             expect(rtn).to.be.equal(0);
-
-            HCID = MPIN.HASH_ID(sha, CLIENT_ID);
-            MPIN.GET_G1_MULTIPLE(rng, 1, R, HCID, Z); /* Also Send Z=r.ID to Server, remember random r */
 
             rtn = MPIN.SERVER(sha, date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, E, F, CLIENT_ID, timeValue);
             expect(rtn).to.be.equal(MPIN.BAD_PIN);
@@ -284,65 +308,6 @@ pf_curves.forEach(function(curve) {
             /* Retrieve PIN error from bad PIN test*/
             rtn = MPIN.KANGAROO(E,F);
             expect(rtn).to.be.equal(pin2-pin);
-
-            done();
-        });
-
-        it('test MPin FUll Two Pass', function(done) {
-            this.timeout(0);
-
-            /* Set configuration */
-            date = MPIN.today();
-
-            var pxID = xID;
-            var pxCID = xCID;
-            var pHID = HID;
-            var pHTID = HTID;
-            var pE = null;
-            var pF = null;
-            var pPERMIT = PERMIT;
-            var prHID;
-
-            if (date != 0) {
-                prHID = pHTID;
-                pxID = null;
-            } else {
-                prHID = pHID;
-                pPERMIT = null;
-                pxCID = null;
-                pHTID = null;
-            }
-
-            rtn = MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT);
-            expect(rtn).to.be.equal(0);
-
-            HCID = MPIN.HASH_ID(sha, CLIENT_ID);
-            MPIN.GET_G1_MULTIPLE(rng, 1, R, HCID, Z); /* Also Send Z=r.ID to Server, remember random r */
-
-            /* Server calculates H(ID) and H(T|H(ID)) (if time permits enabled), and maps them to points on the curve HID and HTID resp. */
-            MPIN.SERVER_1(sha, date, CLIENT_ID, pHID, pHTID);
-
-            /* Server generates Random number Y and sends it to Client */
-            MPIN.RANDOM_GENERATE(rng, Y);
-
-            HSID = MPIN.HASH_ID(sha, CLIENT_ID);
-            MPIN.GET_G1_MULTIPLE(rng, 0, W, prHID, T); /* Also send T=w.ID to client, remember random w  */
-
-            /* Client Second Pass: Inputs Client secret SEC, x and y. Outputs -(x+y)*SEC */
-            rtn = MPIN.CLIENT_2(X, Y, SEC);
-            expect(rtn).to.be.equal(0);
-
-            /* Server Second pass. Inputs hashed client id, random Y, -(x+y)*SEC, xID and xCID and Server secret SST. E and F help kangaroos to find error. */
-            /* If PIN error not required, set E and F = NULL */
-            rtn = MPIN.SERVER_2(date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, pE, pF);
-            expect(rtn).to.be.equal(0);
-
-            H = MPIN.HASH_ALL(sha, HCID, pxID, pxCID, SEC, Y, Z, T);
-            MPIN.CLIENT_KEY(sha, G1, G2, pin, R, X, H, T, CK);
-
-            H = MPIN.HASH_ALL(sha, HSID, pxID, pxCID, SEC, Y, Z, T);
-            MPIN.SERVER_KEY(sha, Z, SST, W, H, pHID, pxID, pxCID, SK);
-            expect(MPIN.bytestostring(CK)).to.be.equal(MPIN.bytestostring(SK));
 
             done();
         });
