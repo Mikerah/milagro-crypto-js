@@ -81,8 +81,15 @@ describe('TEST FP12 ARITHMETIC', function() {
 
             var ctx = new CTX(curve);
             var vectors = require('../testVectors/fp12/'+ curve +'.json');
-            var i = 0;
 
+            var Fra = new ctx.FP(0),
+                Frb = new ctx.FP(0),
+                Fr;
+            Fra.rcopy(ctx.ROM_FIELD.Fra);
+            Frb.rcopy(ctx.ROM_FIELD.Frb);
+            Fr = new ctx.FP2(Fra,Frb);
+
+            var i = 0;
             vectors.forEach(function(vector) {
                 var fp121,fp122,fp123,fp124,fp12c;
                 fp121 = readFP12(vector.FP121, ctx);
@@ -161,34 +168,29 @@ describe('TEST FP12 ARITHMETIC', function() {
                 expect(a1.toString()).to.equal(fp12pinpow.toString());
                 i++;
 
+                // test frobenius
+                var fp12frob = readFP12(vector.FP12frob, ctx);
+                a1.copy(fp121);
+                a1.frob(Fr);
+                expect(a1.toString()).to.equal(fp12frob.toString());
+
                 // test compressed power with big integer
                 var fp12compow = readFP4(vector.FP12compow, ctx);
-                a1.norm();
                 a1 = fp12c.compow(BIGsc1,BIGsco);
                 expect(a1.toString()).to.equal(fp12compow.toString());
 
                 // test compressed power with small integer
                 var fp12compows = readFP4(vector.FP12compows, ctx);
-                a1.norm();
                 a1 = fp12c.compow(BIGscs,BIGsco);
                 expect(a1.toString()).to.equal(fp12compows.toString());
 
                 // test pow4
-                var fp12pow4 = readFP12(vector.FP12pow4, ctx);
-                a1 = ctx.FP12.pow4([fp121,fp122,fp123,fp124],[BIGsc1,BIGsc2,BIGsc3,BIGsc4]);
-                expect(a1.toString()).to.equal(fp12pow4.toString());
-
-                // test frobenius
-                var fp12frob = readFP12(vector.FP12frob, ctx);
-                var Fra = new ctx.FP(0),
-                    Frb = new ctx.FP(0),
-                    Fr;
-                Fra.rcopy(ctx.ROM_FIELD.Fra);
-                Frb.rcopy(ctx.ROM_FIELD.Frb);
-                Fr = new ctx.FP2(Fra,Frb);
-                a1.copy(fp121);
-                a1.frob(Fr);
-                expect(a1.toString()).to.equal(fp12frob.toString());
+                // Executed only once for timing reasons
+                if (i===0) {
+                    var fp12pow4 = readFP12(vector.FP12pow4, ctx);
+                    a1 = ctx.FP12.pow4([fp121,fp122,fp123,fp124],[BIGsc1,BIGsc2,BIGsc3,BIGsc4]);
+                    expect(a1.toString()).to.equal(fp12pow4.toString());
+                }
 
                 //test trace
                 var fp4trace = readFP4(vector.FP4trace, ctx);

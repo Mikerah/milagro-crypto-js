@@ -191,20 +191,21 @@ describe('TEST FP24 ARITHMETIC', function() {
 
                 // test compressed power with big integer
                 var fp24compow = readFP8(vector.FP24compow, ctx);
-                a1.norm();
                 a1 = fp24c.compow(BIGsc[0],BIGsco);
                 expect(a1.toString()).to.equal(fp24compow.toString());
 
                 // test compressed power with small integer
                 var fp24compows = readFP8(vector.FP24compows, ctx);
-                a1.norm();
                 a1 = fp24c.compow(BIGscs,BIGsco);
                 expect(a1.toString()).to.equal(fp24compows.toString());
 
                 // test pow8
-                var fp24pow8 = readFP24(vector.FP24pow8, ctx);
-                a1 = ctx.FP24.pow8(fp24frobs,BIGsc);
-                expect(a1.toString()).to.equal(fp24pow8.toString());
+                // tested only once for timing reasons
+                if (i===0) {
+                    var fp24pow8 = readFP24(vector.FP24pow8, ctx);
+                    a1 = ctx.FP24.pow8(fp24frobs,BIGsc);
+                    expect(a1.toString()).to.equal(fp24pow8.toString());
+                }
 
                 // test frobenius
                 var fp24frob = readFP24(vector.FP24frob, ctx);
