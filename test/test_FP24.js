@@ -97,32 +97,45 @@ describe('TEST FP24 ARITHMETIC', function() {
             var vectors = require('../testVectors/fp24/'+ curve +'.json');
             var i = 0;
 
+            var Fra = new ctx.FP(0),
+                Frb = new ctx.FP(0),
+                Fr;
+            Fra.rcopy(ctx.ROM_FIELD.Fra);
+            Frb.rcopy(ctx.ROM_FIELD.Frb);
+            Fr = new ctx.FP2(Fra,Frb);
+
             vectors.forEach(function(vector) {
                 var fp241,fp242,fp24c;
                 fp241 = readFP24(vector.FP241, ctx);
                 fp242 = readFP24(vector.FP242, ctx);
                 fp24c = readFP24(vector.FP24c, ctx);
 
+                // Generate/read the necessary FP24 and BIGs
                 var fp24frobs = [fp241];
-                var Fra = new ctx.FP(0),
-                    Frb = new ctx.FP(0),
-                    Fr;
-                Fra.rcopy(ctx.ROM_FIELD.Fra);
-                Frb.rcopy(ctx.ROM_FIELD.Frb);
-                Fr = new ctx.FP2(Fra,Frb);
-                for (k=1; k<8; k++) {
+                if(i===0){
+                    for (k=1; k<8; k++) {
+                        var t = new ctx.FP24(0);
+                        t.copy(fp24frobs[k-1]);
+                        t.frob(Fr,1);
+                        fp24frobs[k] = t;
+                    }
+                } else {
                     var t = new ctx.FP24(0);
-                    t.copy(fp24frobs[k-1]);
+                    t.copy(fp241);
                     t.frob(Fr,1);
-                    fp24frobs[k] = t;
+                    fp24frobs[1] = t;
                 }
 
                 var BIGsc = [],
                     BIGscs,
                     BIGsco,
                     k;
-                for (k=1; k<=8; k++) {
-                    BIGsc[k-1] = readBIG(vector["BIGsc" + k], ctx);
+                if (i === 0) {
+                    for (k=1; k<=8; k++) {
+                        BIGsc[k-1] = readBIG(vector["BIGsc" + k], ctx);
+                    }
+                } else {
+                    BIGsc[0] = readBIG(vector.BIGsc1, ctx);
                 }
                 BIGscs = readBIG(vector.BIGscs, ctx);
                 BIGsco = readBIG(vector.BIGsco, ctx);

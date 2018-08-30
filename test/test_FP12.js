@@ -91,21 +91,24 @@ describe('TEST FP12 ARITHMETIC', function() {
 
             var i = 0;
             vectors.forEach(function(vector) {
+                // Generate/read the necessary FP12 and BIGs
                 var fp121,fp122,fp123,fp124,fp12c;
                 fp121 = readFP12(vector.FP121, ctx);
                 fp122 = readFP12(vector.FP122, ctx);
-                fp123 = readFP12(vector.FP123, ctx);
-                fp124 = readFP12(vector.FP124, ctx);
-                fp12c = readFP12(vector.FP12c, ctx);
-
+                if (i===0){
+                    fp123 = readFP12(vector.FP123, ctx);
+                    fp124 = readFP12(vector.FP124, ctx);
+                }
+                    fp12c = readFP12(vector.FP12c, ctx);
                 var BIGsc1,BIGsc2,BIGsc3,BIGsc4,BIGscs,BIGsco;
                 BIGsc1 = readBIG(vector.BIGsc1, ctx);
-                BIGsc2 = readBIG(vector.BIGsc2, ctx);
-                BIGsc3 = readBIG(vector.BIGsc3, ctx);
-                BIGsc4 = readBIG(vector.BIGsc4, ctx);
+                if (i===0){
+                    BIGsc2 = readBIG(vector.BIGsc2, ctx);
+                    BIGsc3 = readBIG(vector.BIGsc3, ctx);
+                    BIGsc4 = readBIG(vector.BIGsc4, ctx);
+                }
                 BIGscs = readBIG(vector.BIGscs, ctx);
                 BIGsco = readBIG(vector.BIGsco, ctx);
-
                 var a1 = new ctx.FP12(0);
                 var a2 = new ctx.FP12(0);
 

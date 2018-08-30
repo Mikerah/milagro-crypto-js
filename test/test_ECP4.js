@@ -38,7 +38,9 @@ describe('TEST ECP4 ARITHMETIC', function() {
             var ctx = new CTX(curve);
             var vectors = require('../testVectors/ecp4/'+curve+'.json');
 
-            var i=0;
+            var F = ctx.ECP4.frob_constants();
+
+            var k, i=0;
             vectors.forEach(function(vector) {
                 var ecp4frobs = [ctx.ECP4.fromBytes(Buffer.from(vector.ECP41,"hex"))];
                 var ecp41 = ecp4frobs[0];
@@ -68,20 +70,28 @@ describe('TEST ECP4 ARITHMETIC', function() {
                 expect(res.toString()).to.equal(y.toString());
 
                 // Compute frobenius constants and repeated frob actions over ecp41
-                var F = ctx.ECP4.frob_constants(),
-                    k;
-                for (k=1; k<8; k++) {
+                if (i===0) {
+                    for (k=1; k<8; k++) {
+                        var t = new ctx.ECP4();
+                        t.copy(ecp4frobs[k-1]);
+                        t.frob(F,1);
+                        ecp4frobs[k] = t;
+                    }
+                } else {
                     var t = new ctx.ECP4();
-                    t.copy(ecp4frobs[k-1]);
-                    t.frob(F,1); 
-                    ecp4frobs[k] = t; 
+                    t.copy(ecp41);
+                    t.frob(F,3);
+                    ecp4frobs[3] = t;
                 }
 
                 var BIGsc = [];
-                for (k=1; k<=8; k++) {
-                    BIGsc[k-1] = ctx.BIG.fromBytes(Buffer.from(vector["BIGscalar" + k],"hex"));
+                if (i===0){
+                    for (k=1; k<=8; k++) {
+                        BIGsc[k-1] = ctx.BIG.fromBytes(Buffer.from(vector["BIGscalar" + k],"hex"));
+                    }
+                } else {
+                    BIGsc[0] = ctx.BIG.fromBytes(Buffer.from(vector.BIGscalar1,"hex"));
                 }
-
                 // Test commutativity of the sum
                 var ecp42 = ctx.ECP4.fromBytes(Buffer.from(vector.ECP42,"hex"));
                 var ecp4sum = ctx.ECP4.fromBytes(Buffer.from(vector.ECP4sum,"hex"));

@@ -31,7 +31,7 @@ var vectors = require('../testVectors/big/BIG.json');
 
 var readBIG = function(string, ctx) {
     while (string.length != ctx.BIG.MODBYTES*2) string = "00"+string;
-    return ctx.BIG.fromBytes(new Buffer(string, "hex"));
+    return ctx.BIG.fromBytes(Buffer.from(string, "hex"));
 }
 
 var readDBIG = function(string, ctx) {
@@ -40,7 +40,7 @@ var readDBIG = function(string, ctx) {
     	arr,h,u;
 
     while (string.length != ctx.BIG.MODBYTES*4) string = "00"+string;
-   	arr = new Buffer(string, "hex");
+   	arr = Buffer.from(string, "hex");
 
    	u = ctx.BIG.fromBytes(arr);
    	h = ctx.BIG.frombytearray(arr,ctx.BIG.MODBYTES);
