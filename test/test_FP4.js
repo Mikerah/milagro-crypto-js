@@ -26,7 +26,7 @@ var CTX = require("../index");
 
 var expect = chai.expect;
 
-var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24', 'BLS48'];
 
 var readBIG = function(string, ctx) {
     while (string.length != ctx.BIG.MODBYTES*2){string = "00"+string;}
@@ -110,11 +110,10 @@ describe('TEST FP4 ARITHMETIC', function() {
                 var fp4add = readFP4(vector.FP4add,ctx);
 
                 a1.copy(fp41);
-                a2.copy(fp42);
-                a1.add(a2);
+                a1.add(fp42);
                 expect(a1.toString()).to.equal(fp4add.toString());
-                a1.copy(fp41);
-                a2.add(a1);
+                a2.copy(fp42);
+                a2.add(fp41);
                 expect(a2.toString()).to.equal(fp4add.toString());
 
                 // test associativity of addition
@@ -127,8 +126,7 @@ describe('TEST FP4 ARITHMETIC', function() {
                 // test subtraction
                 var fp4sub = readFP4(vector.FP4sub, ctx);
                 a1.copy(fp41);
-                a2.copy(fp42);
-                a1.sub(a2);
+                a1.sub(fp42);
                 expect(a1.toString()).to.equal(fp4sub.toString());
 
                 // test negative of a FP4
@@ -172,16 +170,13 @@ describe('TEST FP4 ARITHMETIC', function() {
                 // test multiplication
                 var fp4mul = readFP4(vector.FP4mul, ctx);
                 a1.copy(fp41);
-                a2.copy(fp42);
-                a1.mul(a2);
+                a1.mul(fp42);
                 expect(a1.toString()).to.equal(fp4mul.toString());
 
                 // test power
                 var fp4pow = readFP4(vector.FP4pow, ctx);
                 var BIGsc1 = readBIG(vector.BIGsc1, ctx);
-                BIGsc1.norm();
-                a1.copy(fp41);
-                a1 = a1.pow(BIGsc1);
+                a1 = fp41.pow(BIGsc1);
                 expect(a1.toString()).to.equal(fp4pow.toString());
 
                 // test inverse

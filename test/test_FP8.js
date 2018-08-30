@@ -26,7 +26,7 @@ var CTX = require("../index");
 
 var expect = chai.expect;
 
-var pf_curves = ['BLS24'];
+var pf_curves = ['BLS24','BLS48'];
 
 var readBIG = function(string, ctx) {
     while (string.length != ctx.BIG.MODBYTES*2){string = "00"+string;}
@@ -127,11 +127,10 @@ describe('TEST FP8 ARITHMETIC', function() {
                 var fp8add = readFP8(vector.FP8add,ctx);
 
                 a1.copy(fp81);
-                a2.copy(fp82);
-                a1.add(a2);
+                a1.add(fp82);
                 expect(a1.toString()).to.equal(fp8add.toString());
-                a1.copy(fp81);
-                a2.add(a1);
+                a2.copy(fp82);
+                a2.add(fp81);
                 expect(a2.toString()).to.equal(fp8add.toString());
 
                 // test associativity of addition
@@ -144,12 +143,10 @@ describe('TEST FP8 ARITHMETIC', function() {
                 // test subtraction
                 var fp8sub = readFP8(vector.FP8sub, ctx);
                 a1.copy(fp81);
-                a2.copy(fp82);
-                a1.sub(a2);
+                a1.sub(fp82);
                 expect(a1.toString()).to.equal(fp8sub.toString());
-                a1.copy(fp81);
-                a1.rsub(a2);
-                a1.neg();
+                a1.copy(fp82);
+                a1.rsub(fp81);
                 expect(a1.toString()).to.equal(fp8sub.toString());
 
                 // test negative of a FP8
@@ -207,14 +204,12 @@ describe('TEST FP8 ARITHMETIC', function() {
                 // test multiplication
                 var fp8mul = readFP8(vector.FP8mul, ctx);
                 a1.copy(fp81);
-                a2.copy(fp82);
-                a1.mul(a2);
+                a1.mul(fp82);
                 expect(a1.toString()).to.equal(fp8mul.toString());
 
                 // test power
                 var fp8pow = readFP8(vector.FP8pow, ctx);
                 var BIGsc1 = readBIG(vector.BIGsc1, ctx);
-                BIGsc1.norm();
                 a1.copy(fp81);
                 a1 = a1.pow(BIGsc1);
                 expect(a1.toString()).to.equal(fp8pow.toString());

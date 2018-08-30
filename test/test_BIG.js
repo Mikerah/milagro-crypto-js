@@ -25,13 +25,13 @@ var CTX = require("../index");
 
 var expect = chai.expect;
 
-var all_curves = ['ED25519', 'GOLDILOCKS', 'NIST256', 'BRAINPOOL', 'ANSSI', 'HIFIVE', 'C25519', 'SECP256K1', 'NIST384', 'C41417', 'NIST521', 'NUMS256W', 'NUMS256E', 'NUMS384W', 'NUMS384E', 'NUMS512W', 'NUMS512E', 'BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
+var all_curves = ['ED25519', 'GOLDILOCKS', 'NIST256', 'BRAINPOOL', 'ANSSI', 'HIFIVE', 'C25519', 'SECP256K1', 'NIST384', 'C41417', 'NIST521', 'NUMS256W', 'NUMS256E', 'NUMS384W', 'NUMS384E', 'NUMS512W', 'NUMS512E', 'BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24', 'BLS48'];
 
 var vectors = require('../testVectors/big/BIG.json');
 
 var readBIG = function(string, ctx) {
     while (string.length != ctx.BIG.MODBYTES*2) string = "00"+string;
-    return ctx.BIG.fromBytes(new Buffer(string, "hex"));
+    return ctx.BIG.fromBytes(Buffer.from(string, "hex"));
 }
 
 var readDBIG = function(string, ctx) {
@@ -40,7 +40,7 @@ var readDBIG = function(string, ctx) {
     	arr,h,u;
 
     while (string.length != ctx.BIG.MODBYTES*4) string = "00"+string;
-   	arr = new Buffer(string, "hex");
+   	arr = Buffer.from(string, "hex");
 
    	u = ctx.BIG.fromBytes(arr);
    	h = ctx.BIG.frombytearray(arr,ctx.BIG.MODBYTES);

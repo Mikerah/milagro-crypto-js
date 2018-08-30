@@ -26,7 +26,7 @@ var CTX = require("../index");
 
 var expect = chai.expect;
 
-var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24', 'BLS48'];
 
 var readBIG = function(string, ctx) {
     while (string.length != ctx.BIG.MODBYTES*2){string = "00"+string;}
@@ -65,11 +65,10 @@ describe('TEST FP2 ARITHMETIC', function() {
                 var a1 = new ctx.FP2(0);
                 var a2 = new ctx.FP2(0);
                 a1.copy(fp21);
-                a2.copy(fp22);
-                a1.add(a2);
+                a1.add(fp22);
                 expect(a1.toString()).to.equal(fp2add.toString());
-                a1.copy(fp21);
-                a2.add(a1);
+                a2.copy(fp22);
+                a2.add(fp21);
                 expect(a2.toString()).to.equal(fp2add.toString());
 
                 // test associativity of addition
@@ -82,8 +81,7 @@ describe('TEST FP2 ARITHMETIC', function() {
                 // test subtraction
                 var fp2sub = readFP2(vector.FP2sub, ctx);
                 a1.copy(fp21);
-                a2.copy(fp22);
-                a1.sub(a2);
+                a1.sub(fp22);
                 expect(a1.toString()).to.equal(fp2sub.toString());
 
                 // test negative of a FP2
@@ -132,9 +130,7 @@ describe('TEST FP2 ARITHMETIC', function() {
 
                 // test power
                 var fp2pow = readFP2(vector.FP2pow, ctx);
-                a1.copy(fp21);
-                scalar.norm();
-                a1 = a1.pow(scalar);
+                a1 = fp21.pow(scalar);
                 expect(a1.toString()).to.equal(fp2pow.toString());
 
                 // test inverse

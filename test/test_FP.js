@@ -29,7 +29,7 @@ var CTX = require("../index");
 var expect = chai.expect;
 
 var fp_curves = ['ED25519', 'GOLDILOCKS', 'NIST256', 'BRAINPOOL', 'ANSSI', 'HIFIVE', 'NIST384', 'C41417', 'SECP256K1', 'NIST521', 'NUMS256W',
-    'NUMS256E', 'NUMS384W', 'NUMS512W', 'BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'
+    'NUMS256E', 'NUMS384W', 'NUMS512W', 'BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24', 'BLS48'
 ];
 
 var readBIG = function(string, ctx) {
@@ -69,11 +69,10 @@ describe('TEST FP ARITHMETIC', function() {
                 var a1 = new ctx.FP(0);
                 var a2 = new ctx.FP(0);
                 a1.copy(fp1);
-                a2.copy(fp2);
-                a1.add(a2);
+                a1.add(fp2);
                 expect(a1.toString()).to.equal(fpadd.toString());
-                a1.copy(fp1);
-                a2.add(a1);
+                a2.copy(fp2);
+                a2.add(fp1);
 				expect(a2.toString()).to.equal(fpadd.toString());
 
 				// test associativity of addition
@@ -86,15 +85,13 @@ describe('TEST FP ARITHMETIC', function() {
 	            // test subtraction
 	            var fpsub = readFP(vector.FPsub, ctx);
 	            a1.copy(fp1);
-	            a2.copy(fp2);
-	            a1.sub(a2);
+	            a1.sub(fp2);
 	            expect(a1.toString()).to.equal(fpsub.toString());
 
                 // test multiplication
                 var fpmul = readFP(vector.FPmulmod, ctx);
                 a1.copy(fp1);
-                a2.copy(fp2);
-                a1.mul(a2);
+                a1.mul(fp2);
                 expect(a1.toString()).to.equal(fpmul.toString());
 
                 // test small multiplication

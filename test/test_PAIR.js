@@ -25,101 +25,71 @@ var chai = require('chai');
 
 var expect = chai.expect;
 
-var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24', 'BLS48'];
 
 pf_curves.forEach(function(curve) {
 
     describe('TEST PAIR ' + curve, function() {
 
-        var ctx = new CTX(curve);
-        var rng = new ctx.RAND();
-
-        var r = new ctx.BIG(0);
-        var x = new ctx.BIG(0);
-        var y = new ctx.BIG(0);
-
-        var G = new ctx.ECP(0);
-        var G1 = new ctx.ECP(0);
-        var G2 = new ctx.ECP(0);
-        var Gaux = new ctx.ECP(0);
+        var ctx = new CTX(curve),
+            rng = new ctx.RAND(),
+            r = new ctx.BIG(0),
+            G = ctx.ECP.generator(),
+            G1 = new ctx.ECP(0),
+            G2 = new ctx.ECP(0),
+            Gaux = new ctx.ECP(0);
 
         // Set curve order
         r.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
-        // Set generator of G1
-        x.rcopy(ctx.ROM_CURVE.CURVE_Gx);
-        y.rcopy(ctx.ROM_CURVE.CURVE_Gy);
-        G.setxy(x,y);
-
         if (ctx.ECP.CURVE_PAIRING_TYPE === 1 | ctx.ECP.CURVE_PAIRING_TYPE === 2) {
-            var Q = new ctx.ECP2(0);
-            var Q1 = new ctx.ECP2(0);
-            var Q2 = new ctx.ECP2(0);
-            var Qaux = new ctx.ECP2(0);
-
-            var g11 = new ctx.FP12(0);
-            var g12 = new ctx.FP12(0);
-            var g21 = new ctx.FP12(0);
-            var g22 = new ctx.FP12(0);
-            var g1s = new ctx.FP12(0);
-            var gs1 = new ctx.FP12(0);
-            var aux1 = new ctx.FP12(0);
-            var aux2 = new ctx.FP12(0);
-
-            var qx = new ctx.FP2(0);
-            var qy = new ctx.FP2(0);
+            var Q = ctx.ECP2.generator(),
+                Q1 = new ctx.ECP2(0),
+                Q2 = new ctx.ECP2(0),
+                Qaux = new ctx.ECP2(0),
+                g11 = new ctx.FP12(0),
+                g12 = new ctx.FP12(0),
+                g21 = new ctx.FP12(0),
+                g22 = new ctx.FP12(0),
+                g1s = new ctx.FP12(0),
+                gs1 = new ctx.FP12(0),
+                aux1 = new ctx.FP12(0),
+                aux2 = new ctx.FP12(0);
 
             // Set pairing interface
             var PAIR = ctx.PAIR;
 
-            // Set generator of G2
-            x.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
-            y.rcopy(ctx.ROM_CURVE.CURVE_Pxb);
-            qx.bset(x, y);
-            x.rcopy(ctx.ROM_CURVE.CURVE_Pya);
-            y.rcopy(ctx.ROM_CURVE.CURVE_Pyb);
-            qy.bset(x, y);
-            Q.setxy(qx, qy);
         } else if (ctx.ECP.CURVE_PAIRING_TYPE === 3) {
-            var Q = new ctx.ECP4(0);
-            var Q1 = new ctx.ECP4(0);
-            var Q2 = new ctx.ECP4(0);
-            var Qaux = new ctx.ECP4(0);
+            var Q = ctx.ECP4.generator(),
+                Q1 = new ctx.ECP4(0),
+                Q2 = new ctx.ECP4(0),
+                Qaux = new ctx.ECP4(0),
 
-            var g11 = new ctx.FP24(0);
-            var g22 = new ctx.FP24(0);
-            var g1s = new ctx.FP24(0);
-            var gs1 = new ctx.FP24(0);
-            var aux1 = new ctx.FP24(0);
-            var aux2 = new ctx.FP24(0);
-
-            var qca = new ctx.FP2(0);
-            var qcb = new ctx.FP2(0);
-
-            var qx = new ctx.FP4(0);
-            var qy = new ctx.FP4(0);
+                g11 = new ctx.FP24(0),
+                g22 = new ctx.FP24(0),
+                g1s = new ctx.FP24(0),
+                gs1 = new ctx.FP24(0),
+                aux1 = new ctx.FP24(0),
+                aux2 = new ctx.FP24(0);
 
             // Set pairing interface
             var PAIR = ctx.PAIR192;
 
-            // Set generator of G2
-            x.rcopy(ctx.ROM_CURVE.CURVE_Pxaa);
-            y.rcopy(ctx.ROM_CURVE.CURVE_Pxab);
-            qca.bset(x, y);
-            x.rcopy(ctx.ROM_CURVE.CURVE_Pxba);
-            y.rcopy(ctx.ROM_CURVE.CURVE_Pxbb);
-            qcb.bset(x, y);
-            qx.set(qca,qcb);
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 4) {
+            var Q = ctx.ECP8.generator(),
+                Q1 = new ctx.ECP8(0),
+                Q2 = new ctx.ECP8(0),
+                Qaux = new ctx.ECP8(0),
 
-            x.rcopy(ctx.ROM_CURVE.CURVE_Pyaa);
-            y.rcopy(ctx.ROM_CURVE.CURVE_Pyab);
-            qca.bset(x, y);
-            x.rcopy(ctx.ROM_CURVE.CURVE_Pyba);
-            y.rcopy(ctx.ROM_CURVE.CURVE_Pybb);
-            qcb.bset(x, y);
-            qy.set(qca,qcb);
+                g11 = new ctx.FP48(0),
+                g22 = new ctx.FP48(0),
+                g1s = new ctx.FP48(0),
+                gs1 = new ctx.FP48(0),
+                aux1 = new ctx.FP48(0),
+                aux2 = new ctx.FP48(0);
 
-            Q.setxy(qx, qy);
+            // Set pairing interface
+            PAIR = ctx.PAIR256;
         }
 
         before(function(done) {
@@ -170,6 +140,7 @@ pf_curves.forEach(function(curve) {
             expect(g1s.toString()).to.be.equal(gs1.toString());
 
             gs1 = PAIR.GTpow(g11,s);
+
             expect(g1s.toString()).to.be.equal(gs1.toString());
 
             done();
