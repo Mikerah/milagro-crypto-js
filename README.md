@@ -25,7 +25,7 @@
 
 ## Install and run  tests
 
-[Node.js](https://nodejs.org/en/) and [npm](https://www.npmjs.com/) are required in order to build the library and run the tests. Install also the node.js modules required with the command
+[Node.js](https://nodejs.org/en/) (minimum v6.9.5) and [npm](https://www.npmjs.com/) are required in order to build the library and run the tests. Install also the node.js modules required with the command
 
 ```
 npm install
@@ -58,7 +58,7 @@ var ctx2 = new CTX("C25519");
 ```
 The following is the list of all elliptic curves supported by MCJS
 ```
-['ED25519', 'C25519', 'C41417', 'GOLDILOCKS', 'NIST256', 'NIST384','NIST521', 'BRAINPOOL', 'ANSSI', 'HIFIVE', 'NUMS256W', 'NUMS256E', 'NUMS384W', 'NUMS384E', 'NUMS512W', 'NUMS512E', 'BN254', 'BN254CX', 'BLS383'];
+['ED25519', 'C25519', 'SECP256K1', 'NIST256', 'NIST384', 'BRAINPOOL', 'ANSSI', 'HIFIVE', 'GOLDILOCKS', 'C41417', 'NIST521', 'NUMS256W', 'NUMS256E', 'NUMS384W', 'NUMS384E', 'NUMS512W', 'NUMS512E', 'FP256BN', 'FP512BN', 'BN254', 'BN254CX', 'BLS383', 'BLS24', 'BLS48', 'BLS381', 'BLS461'];
 ```
 #### RSA
 This library supports also RSA encryption/decryption and RSA signature. The following is a quick example on how to use RSA. First initialize the context
@@ -83,8 +83,6 @@ var CTX = require("milagro-crypto-js");
 
 var ctx = new CTX();
 ```
-In the `/example` directory there are many simple script that show how to use this library.
-
 
 ## Run examples
 
