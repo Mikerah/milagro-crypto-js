@@ -57,7 +57,7 @@ console.log("Alice's Passphrase= " + pp);
 
 var PW = ctx1.ECDH.stringtobytes(pp);
 // private key S0 of size EGS bytes derived from Password and Salt
-var S0 = ctx1.ECDH.PBKDF2(ctx1.ECDH.HASH_TYPE, PW, SALT, 1000, ctx1.ECDH.EGS);
+var S0 = ctx1.ECDH.PBKDF2(ctx1.ECP.HASH_TYPE, PW, SALT, 1000, ctx1.ECP.AESKEY);
 
 console.log("Alice's private key= 0x" + ctx1.ECDH.bytestostring(S0));
 // Generate Key pair S/W
@@ -99,7 +99,7 @@ if (!same) {
     return (-1);
 }
 
-var KEY = ctx1.ECDH.KDF2(ctx1.ECDH.HASH_TYPE, Z0, null, ctx1.ECDH.EAS);
+var KEY = ctx1.ECDH.KDF2(ctx1.ECP.HASH_TYPE, Z0, null, ctx1.ECP.AESKEY);
 
 console.log("Alice's ECDH Key= 0x" + ctx1.ECDH.bytestostring(KEY));
 console.log("Servers ECDH Key= 0x" + ctx1.ECDH.bytestostring(KEY));
@@ -136,7 +136,7 @@ console.log("Alice's Passphrase= " + pp);
 
 var PW = ctx2.ECDH.stringtobytes(pp);
 // private key S0 of size EGS bytes derived from Password and Salt
-var S0 = ctx2.ECDH.PBKDF2(ctx2.ECDH.HASH_TYPE, PW, SALT, 1000, ctx1.ECDH.EGS);
+var S0 = ctx2.ECDH.PBKDF2(ctx2.ECP.HASH_TYPE, PW, SALT, 1000, ctx1.ECDH.EGS);
 
 console.log("Alice's private key= 0x" + ctx2.ECDH.bytestostring(S0));
 // Generate Key pair S/W
@@ -178,7 +178,7 @@ if (!same) {
     return (-1);
 }
 
-var KEY = ctx2.ECDH.KDF2(ctx2.ECDH.HASH_TYPE, Z0, null, ctx2.ECDH.EAS);
+var KEY = ctx2.ECDH.KDF2(ctx2.ECP.HASH_TYPE, Z0, null, ctx2.ECP.AESKEY);
 
 console.log("Alice's ECDH Key= 0x" + ctx2.ECDH.bytestostring(KEY));
 console.log("Servers ECDH Key= 0x" + ctx2.ECDH.bytestostring(KEY));

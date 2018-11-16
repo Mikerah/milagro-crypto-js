@@ -2,31 +2,31 @@
 <html>
 <head>
 <title>Browser test</title>
-<script src="../../src/rand.js"></script>
-<script src="../../src/rom_curve.js"></script>
-<script src="../../src/rom_field.js"></script>
-<script src="../../src/uint64.js"></script>
-<script src="../../src/aes.js"></script>
-<script src="../../src/big.js"></script>
-<script src="../../src/gcm.js"></script>
-<script src="../../src/hash256.js"></script>
-<script src="../../src/hash384.js"></script>
-<script src="../../src/hash512.js"></script>
-<script src="../../src/sha3.js"></script>
-<script src="../../src/newhope.js"></script>
-<script src="../../src/nhs.js"></script>
-<script src="../../src/fp.js"></script>
-<script src="../../src/fp2.js"></script>
-<script src="../../src/fp4.js"></script>
-<script src="../../src/fp12.js"></script>
-<script src="../../src/ff.js"></script>
-<script src="../../src/rsa.js"></script>
-<script src="../../src/ecp.js"></script>
-<script src="../../src/ecp2.js"></script>
-<script src="../../src/ecdh.js"></script>
-<script src="../../src/pair.js"></script>
-<script src="../../src/mpin.js"></script>
-<script src="../../src/ctx.js"></script>
+<script src="src/rand.js"></script>
+<script src="src/rom_curve.js"></script>
+<script src="src/rom_field.js"></script>
+<script src="src/uint64.js"></script>
+<script src="src/aes.js"></script>
+<script src="src/big.js"></script>
+<script src="src/gcm.js"></script>
+<script src="src/hash256.js"></script>
+<script src="src/hash384.js"></script>
+<script src="src/hash512.js"></script>
+<script src="src/sha3.js"></script>
+<script src="src/newhope.js"></script>
+<script src="src/nhs.js"></script>
+<script src="src/fp.js"></script>
+<script src="src/fp2.js"></script>
+<script src="src/fp4.js"></script>
+<script src="src/fp12.js"></script>
+<script src="src/ff.js"></script>
+<script src="src/rsa.js"></script>
+<script src="src/ecp.js"></script>
+<script src="src/ecp2.js"></script>
+<script src="src/ecdh.js"></script>
+<script src="src/pair.js"></script>
+<script src="src/mpin.js"></script>
+<script src="src/ctx.js"></script>
 </head>
 
 <body>
@@ -80,7 +80,7 @@ var Z = [];
 var Pa = [];
 var U = [];
 
-var sha = ctx.MPIN.HASH_TYPE;
+var sha = ctx.ECP.HASH_TYPE;
 
 /* Trusted Authority set-up */
 ctx.MPIN.RANDOM_GENERATE(rng, S);

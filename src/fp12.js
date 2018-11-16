@@ -61,7 +61,39 @@ var FP12 = function(ctx) {
         /* test x==1 ? */
         isunity: function() {
             var one = new ctx.FP4(1);
-            return (this.a.equals(one) && this.b.iszilch() && this.b.iszilch());
+            return (this.a.equals(one) && this.b.iszilch() && this.c.iszilch());
+        },
+
+
+        /* conditional copy of g to this depending on d */
+        cmove: function(g, d) {
+            this.a.cmove(g.a, d);
+            this.b.cmove(g.b, d);
+            this.c.cmove(g.c, d);
+        },
+
+
+        /* Constant time select from pre-computed table */
+        select: function(g, b) {
+            var invf = new FP12(0),
+                m, babs;
+
+            m = b >> 31;
+            babs = (b ^ m) - m;
+            babs = (babs - 1) / 2;
+
+            this.cmove(g[0], FP12.teq(babs, 0));
+            this.cmove(g[1], FP12.teq(babs, 1));
+            this.cmove(g[2], FP12.teq(babs, 2));
+            this.cmove(g[3], FP12.teq(babs, 3));
+            this.cmove(g[4], FP12.teq(babs, 4));
+            this.cmove(g[5], FP12.teq(babs, 5));
+            this.cmove(g[6], FP12.teq(babs, 6));
+            this.cmove(g[7], FP12.teq(babs, 7));
+
+            invf.copy(this);
+            invf.conj();
+            this.cmove(invf, (m & 1));
         },
 
         /* extract a from this */
@@ -121,9 +153,9 @@ var FP12 = function(ctx) {
 
         /* Granger-Scott Unitary Squaring */
         usqr: function() {
-            var A = new ctx.FP4(this.a), //A.copy(this.a)
-                B = new ctx.FP4(this.c), //B.copy(this.c)
-                C = new ctx.FP4(this.b), //C.copy(this.b)
+            var A = new ctx.FP4(this.a),
+                B = new ctx.FP4(this.c),
+                C = new ctx.FP4(this.b),
                 D = new ctx.FP4(0);
 
             this.a.sqr();
@@ -159,14 +191,14 @@ var FP12 = function(ctx) {
 
         /* Chung-Hasan SQR2 method from http://cacr.uwaterloo.ca/techreports/2006/cacr2006-24.pdf */
         sqr: function() {
-            var A = new ctx.FP4(this.a), //A.copy(this.a)
-                B = new ctx.FP4(this.b), //B.copy(this.b)
-                C = new ctx.FP4(this.c), //C.copy(this.c)
-                D = new ctx.FP4(this.a); //D.copy(this.a)
+            var A = new ctx.FP4(this.a),
+                B = new ctx.FP4(this.b),
+                C = new ctx.FP4(this.c),
+                D = new ctx.FP4(this.a);
 
             A.sqr();
             B.mul(this.c);
-            B.add(B); //B.norm();
+            B.add(B);
             C.sqr();
             D.mul(this.b);
             D.add(D);
@@ -195,12 +227,12 @@ var FP12 = function(ctx) {
 
         /* FP12 full multiplication this=this*y */
         mul: function(y) {
-            var z0 = new ctx.FP4(this.a), //z0.copy(this.a)
+            var z0 = new ctx.FP4(this.a),
                 z1 = new ctx.FP4(0),
-                z2 = new ctx.FP4(this.b), //z2.copy(this.b)
+                z2 = new ctx.FP4(this.b),
                 z3 = new ctx.FP4(0),
-                t0 = new ctx.FP4(this.a), //t0.copy(this.a)
-                t1 = new ctx.FP4(y.a); //t1.copy(y.a)
+                t0 = new ctx.FP4(this.a),
+                t1 = new ctx.FP4(y.a);
 
             z0.mul(y.a);
             z2.mul(y.b);
@@ -257,7 +289,6 @@ var FP12 = function(ctx) {
             z3.add(t1);
             t0.times_i();
             this.b.add(t0);
-            // z3.norm();
             z3.times_i();
             this.a.copy(z0);
             this.a.add(z3);
@@ -267,14 +298,15 @@ var FP12 = function(ctx) {
 
         /* Special case this*=y that arises from special form of ATE pairing line function */
         smul: function(y, twist) {
-            var z0,z1,z2,z3,t0,t1;
+            var z0, z1, z2, z3, t0, t1;
 
             if (twist == ctx.ECP.D_TYPE) {
-                z0 = new ctx.FP4(this.a), //z0.copy(this.a);
-                z2 = new ctx.FP4(this.b), //z2.copy(this.b);
-                z3 = new ctx.FP4(this.b), //z3.copy(this.b);
-                t0 = new ctx.FP4(0),
-                t1 = new ctx.FP4(y.a); //t1.copy(y.a);
+
+                z0 = new ctx.FP4(this.a);
+                z2 = new ctx.FP4(this.b);
+                z3 = new ctx.FP4(this.b);
+                t0 = new ctx.FP4(0);
+                t1 = new ctx.FP4(y.a);
 
                 z0.mul(y.a);
                 z2.pmul(y.b.real());
@@ -313,11 +345,11 @@ var FP12 = function(ctx) {
             }
 
             if (twist == ctx.ECP.M_TYPE) {
-                z0=new ctx.FP4(this.a),
-                z1=new ctx.FP4(0),
-                z2=new ctx.FP4(0),
-                z3=new ctx.FP4(0),
-                t0=new ctx.FP4(this.a),
+                z0=new ctx.FP4(this.a);
+                z1=new ctx.FP4(0);
+                z2=new ctx.FP4(0);
+                z3=new ctx.FP4(0);
+                t0=new ctx.FP4(this.a);
                 t1=new ctx.FP4(0);
 
                 z0.mul(y.a);
@@ -328,7 +360,7 @@ var FP12 = function(ctx) {
                 t0.copy(this.b); t0.add(this.c);
                 t0.norm();
 
-                z3.copy(t0); //z3.mul(y.c);
+                z3.copy(t0);
                 z3.pmul(y.c.getb());
                 z3.times_i();
 
@@ -368,9 +400,9 @@ var FP12 = function(ctx) {
 
         /* this=1/this */
         inverse: function() {
-            var f0 = new ctx.FP4(this.a), //f0.copy(this.a)
-                f1 = new ctx.FP4(this.b), //f1.copy(this.b)
-                f2 = new ctx.FP4(this.a), //f2.copy(this.a)
+            var f0 = new ctx.FP4(this.a),
+                f1 = new ctx.FP4(this.b),
+                f2 = new ctx.FP4(this.a),
                 f3 = new ctx.FP4(0);
 
             f0.sqr();
@@ -512,7 +544,7 @@ var FP12 = function(ctx) {
             e3.pmul(3);
             e3.norm();
 
-            w = new FP12(this); //w.copy(this);
+            w = new FP12(this);
             nb = e3.nbits();
 
             for (i = nb - 2; i >= 1; i--) {
@@ -610,7 +642,7 @@ var FP12 = function(ctx) {
             t[i] = w[i + ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 2 * ctx.BIG.MODBYTES];
@@ -620,9 +652,9 @@ var FP12 = function(ctx) {
             t[i] = w[i + 3 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        d = new ctx.FP2(a, b); //d.bset(a,b);
+        d = new ctx.FP2(a, b);
 
-        e = new ctx.FP4(c, d); //e.set(c,d);
+        e = new ctx.FP4(c, d);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 4 * ctx.BIG.MODBYTES];
@@ -632,7 +664,7 @@ var FP12 = function(ctx) {
             t[i] = w[i + 5 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 6 * ctx.BIG.MODBYTES];
@@ -644,7 +676,7 @@ var FP12 = function(ctx) {
         b = ctx.BIG.fromBytes(t);
         d = new ctx.FP2(a, b);
 
-        f = new ctx.FP4(c, d); //f.set(c,d);
+        f = new ctx.FP4(c, d);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 8 * ctx.BIG.MODBYTES];
@@ -654,7 +686,7 @@ var FP12 = function(ctx) {
             t[i] = w[i + 9 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        c = new ctx.FP2(a, b); //c.bset(a,b);
+        c = new ctx.FP2(a, b);
 
         for (i = 0; i < ctx.BIG.MODBYTES; i++) {
             t[i] = w[i + 10 * ctx.BIG.MODBYTES];
@@ -664,108 +696,98 @@ var FP12 = function(ctx) {
             t[i] = w[i + 11 * ctx.BIG.MODBYTES];
         }
         b = ctx.BIG.fromBytes(t);
-        d = new ctx.FP2(a, b); //d.bset(a,b);
+        d = new ctx.FP2(a, b);
 
-        g = new ctx.FP4(c, d); //g.set(c,d);
+        g = new ctx.FP4(c, d);
 
-        r = new FP12(e, f, g); //r.set(e,f,g);
+        r = new FP12(e, f, g);
 
         return r;
     };
 
-    /* p=q0^u0.q1^u1.q2^u2.q3^u3 */
-    /* Timing attack secure, but not cache attack secure */
 
+    /* return 1 if b==c, no branching */
+    FP12.teq = function(b, c) {
+        var x = b ^ c;
+        x -= 1; // if x=0, x now -1
+        return ((x >> 31) & 1);
+    };
+
+    /* p=q0^u0.q1^u1.q2^u2.q3^u3 */
+    // Bos & Costello https://eprint.iacr.org/2013/458.pdf
+    // Faz-Hernandez & Longa & Sanchez  https://eprint.iacr.org/2013/158.pdf
+    // Side channel attack secure
     FP12.pow4 = function(q, u) {
-        var a = [],
-            g = [],
-            s = [],
-            c = new FP12(1),
+        var g = [],
+            r = new FP12(0),
             p = new FP12(0),
             t = [],
             mt = new ctx.BIG(0),
             w = [],
-            i, j, nb, m;
+            s = [],
+            i, j, k, nb, bt, pb;
 
         for (i = 0; i < 4; i++) {
-            t[i] = new ctx.BIG(u[i]);
+            t[i] = new ctx.BIG(u[i]); t[i].norm();
         }
-
-        s[0] = new FP12(0);
-        s[1] = new FP12(0);
 
         g[0] = new FP12(q[0]);
-        s[0].copy(q[1]);
-        s[0].conj();
-        g[0].mul(s[0]);
-        g[1] = new FP12(g[0]);
-        g[2] = new FP12(g[0]);
-        g[3] = new FP12(g[0]);
-        g[4] = new FP12(q[0]);
-        g[4].mul(q[1]);
-        g[5] = new FP12(g[4]);
-        g[6] = new FP12(g[4]);
-        g[7] = new FP12(g[4]);
+        g[1] = new FP12(g[0]); g[1].mul(q[1]);
+        g[2] = new FP12(g[0]); g[2].mul(q[2]);
+        g[3] = new FP12(g[1]); g[3].mul(q[2]);
+        g[4] = new FP12(q[0]); g[4].mul(q[3]);
+        g[5] = new FP12(g[1]); g[5].mul(q[3]);
+        g[6] = new FP12(g[2]); g[6].mul(q[3]);
+        g[7] = new FP12(g[3]); g[7].mul(q[3]);
 
-        s[1].copy(q[2]);
-        s[0].copy(q[3]);
-        s[0].conj();
-        s[1].mul(s[0]);
-        s[0].copy(s[1]);
-        s[0].conj();
-        g[1].mul(s[0]);
-        g[2].mul(s[1]);
-        g[5].mul(s[0]);
-        g[6].mul(s[1]);
-        s[1].copy(q[2]);
-        s[1].mul(q[3]);
-        s[0].copy(s[1]);
-        s[0].conj();
-        g[0].mul(s[0]);
-        g[3].mul(s[1]);
-        g[4].mul(s[0]);
-        g[7].mul(s[1]);
+        // Make it odd
+        pb=1-t[0].parity();
+        t[0].inc(pb);
+        t[0].norm();
 
-        /* if power is even add 1 to power, and add q to correction */
-
-        for (i = 0; i < 4; i++) {
-            if (t[i].parity() == 0) {
-                t[i].inc(1);
-                t[i].norm();
-                c.mul(q[i]);
-            }
-            mt.add(t[i]);
-            mt.norm();
+        // Number of bits
+        mt.zero();
+        for (i=0;i<4;i++) {
+            mt.or(t[i]);
         }
-        c.conj();
-        nb = 1 + mt.nbits();
 
-        /* convert exponent to signed 1-bit window */
-        for (j = 0; j < nb; j++) {
-            for (i = 0; i < 4; i++) {
-                a[i] = (t[i].lastbits(2) - 2);
-                t[i].dec(a[i]);
-                t[i].norm();
-                t[i].fshr(1);
-            }
-            w[j] = (8 * a[0] + 4 * a[1] + 2 * a[2] + a[3]);
+        nb=1+mt.nbits();
+
+        // Sign pivot
+        s[nb-1]=1;
+        for (i=0;i<nb-1;i++) {
+            t[0].fshr(1);
+            s[i]=2*t[0].parity()-1;
         }
-        w[nb] = (8 * t[0].lastbits(2) + 4 * t[1].lastbits(2) + 2 * t[2].lastbits(2) + t[3].lastbits(2));
-        p.copy(g[Math.floor((w[nb] - 1) / 2)]);
 
-        for (i = nb - 1; i >= 0; i--) {
-            m = w[i] >> 31;
-            j = (w[i] ^ m) - m; /* j=abs(w[i]) */
-            j = (j - 1) / 2;
-            s[0].copy(g[j]);
-            s[1].copy(g[j]);
-            s[1].conj();
+        // Recoded exponent
+        for (i=0; i<nb; i++) {
+            w[i]=0;
+            k=1;
+            for (j=1; j<4; j++) {
+                bt=s[i]*t[j].parity();
+                t[j].fshr(1);
+                t[j].dec(bt>>1);
+                t[j].norm();
+                w[i]+=bt*k;
+                k*=2;
+            }
+        }
+
+        // Main loop
+        p.select(g,2*w[nb-1]+1);
+        for (i=nb-2;i>=0;i--) {
             p.usqr();
-            p.mul(s[m & 1]);
+            r.select(g,2*w[i]+s[i]);
+            p.mul(r);
         }
-        p.mul(c); /* apply correction */
-        p.reduce();
 
+        // apply correction
+        r.copy(q[0]); r.conj();
+        r.mul(p);
+        p.cmove(r,pb);
+
+        p.reduce();
         return p;
     };
 
@@ -773,5 +795,7 @@ var FP12 = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.FP12 = FP12;
+    module.exports = {
+        FP12: FP12
+    };
 }

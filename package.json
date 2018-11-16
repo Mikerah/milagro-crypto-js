@@ -1,6 +1,6 @@
 {
   "name": "milagro-crypto-js",
-  "version": "3.3.0",
+  "version": "3.6.0",
   "description": "Crypto Library in Javascript - Refact of Apache Milagro Crypto Library",
   "main": "index.js",
   "directories": {
@@ -9,8 +9,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha",
-    "coverage": "nyc mocha",
+    "test": "mocha-parallel-tests",
+    "coverage": "nyc mocha-parallel-tests",
     "report": "nyc report --reporter=text-lcov | coveralls",
     "lint": "eslint ."
   },
@@ -32,14 +32,14 @@
   "homepage": "https://github.com/miracl/milagro-crypto-js#readme",
   "devDependencies": {
     "chai": "^3.5.0",
-    "coveralls": "^2.13.1",
+    "coveralls": "^3.0.2",
     "eslint": "^4.12.1",
     "istanbul": "^0.4.5",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "mocha-text-cov": "^0.1.1",
-    "nyc": "^11.0.2"
+    "nyc": "^11.0.2",
+    "mocha-parallel-tests": "^2.0.4"
   },
-  "dependencies": {},
   "nyc": {
     "include": [
       "src/**/*.js"

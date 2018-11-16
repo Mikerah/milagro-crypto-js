@@ -28,7 +28,7 @@ describe('TEST RSA RSA4096', function() {
 
     var ctx = new CTX('RSA4096');
 
-        // Load test vectors
+    // Load test vectors
     var vectors = require('../testVectors/rsa/RSA4096.json');
     var i, j = 0,
         res;
@@ -67,12 +67,12 @@ describe('TEST RSA RSA4096', function() {
 
         for (vector in vectors) {
 
-            ctx.FF.fromBytes(priv.p, new Buffer(vectors[vector].PrivP, "hex"));
-            ctx.FF.fromBytes(priv.q, new Buffer(vectors[vector].PrivQ, "hex"));
-            ctx.FF.fromBytes(priv.dp, new Buffer(vectors[vector].PrivDP, "hex"));
-            ctx.FF.fromBytes(priv.dq, new Buffer(vectors[vector].PrivDQ, "hex"));
-            ctx.FF.fromBytes(priv.c, new Buffer(vectors[vector].PrivC, "hex"));
-            ctx.FF.fromBytes(pub.n, new Buffer(vectors[vector].PubN, "hex"));
+            ctx.FF.fromBytes(priv.p, Buffer.from(vectors[vector].PrivP, "hex"));
+            ctx.FF.fromBytes(priv.q, Buffer.from(vectors[vector].PrivQ, "hex"));
+            ctx.FF.fromBytes(priv.dp, Buffer.from(vectors[vector].PrivDP, "hex"));
+            ctx.FF.fromBytes(priv.dq, Buffer.from(vectors[vector].PrivDQ, "hex"));
+            ctx.FF.fromBytes(priv.c, Buffer.from(vectors[vector].PrivC, "hex"));
+            ctx.FF.fromBytes(pub.n, Buffer.from(vectors[vector].PubN, "hex"));
             pub.e = vectors[vector].PubE;
             M = ctx.RSA.stringtobytes(message);
             E = ctx.RSA.OAEP_ENCODE(sha, M, rng, null); /* OAEP encode message m to e  */
@@ -101,12 +101,12 @@ describe('TEST RSA RSA4096', function() {
 
         for (vector in vectors) {
 
-            ctx.FF.fromBytes(priv.p, new Buffer(vectors[vector].PrivP, "hex"));
-            ctx.FF.fromBytes(priv.q, new Buffer(vectors[vector].PrivQ, "hex"));
-            ctx.FF.fromBytes(priv.dp, new Buffer(vectors[vector].PrivDP, "hex"));
-            ctx.FF.fromBytes(priv.dq, new Buffer(vectors[vector].PrivDQ, "hex"));
-            ctx.FF.fromBytes(priv.c, new Buffer(vectors[vector].PrivC, "hex"));
-            ctx.FF.fromBytes(pub.n, new Buffer(vectors[vector].PubN, "hex"));
+            ctx.FF.fromBytes(priv.p, Buffer.from(vectors[vector].PrivP, "hex"));
+            ctx.FF.fromBytes(priv.q, Buffer.from(vectors[vector].PrivQ, "hex"));
+            ctx.FF.fromBytes(priv.dp, Buffer.from(vectors[vector].PrivDP, "hex"));
+            ctx.FF.fromBytes(priv.dq, Buffer.from(vectors[vector].PrivDQ, "hex"));
+            ctx.FF.fromBytes(priv.c, Buffer.from(vectors[vector].PrivC, "hex"));
+            ctx.FF.fromBytes(pub.n, Buffer.from(vectors[vector].PubN, "hex"));
             pub.e = vectors[vector].PubE;
 
             ctx.RSA.PKCS15(sha, M, C);

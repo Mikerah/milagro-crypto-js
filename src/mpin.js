@@ -38,13 +38,10 @@ var MPIN = function(ctx) {
         /* 200 for 4 digit PIN, 2000 for 6-digit PIN  - approx 2*sqrt(MAXPIN) */
         EFS: ctx.BIG.MODBYTES,
         EGS: ctx.BIG.MODBYTES,
-        PAS: 16,
 
         SHA256: 32,
         SHA384: 48,
         SHA512: 64,
-
-        HASH_TYPE: 32,
 
         /* return time in slots since epoch */
         today: function() {
@@ -140,7 +137,7 @@ var MPIN = function(ctx) {
             }
 
             R = [];
-            for (i = 0; i < this.PAS; i++) {
+            for (i = 0; i < ctx.ECP.AESKEY; i++) {
                 R[i] = h[i];
             }
 
@@ -226,7 +223,7 @@ var MPIN = function(ctx) {
                 u.dec(1);
                 u.norm();
                 r++;
-                R.setxi(u, s); //=new ECP(u,s);
+                R.setxi(u, s);
                 if (!R.is_infinity()) {
                     break;
                 }
@@ -372,10 +369,6 @@ var MPIN = function(ctx) {
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
             s = ctx.BIG.randomnum(r, rng);
-            //if (ROM.AES_S>0)
-            //{
-            //  s.mod2m(2*ROM.AES_S);
-            //}
             s.toBytes(S);
 
             return 0;
@@ -430,21 +423,9 @@ var MPIN = function(ctx) {
 
         /* Extract Server Secret SST=S*Q where Q is fixed generator in G2 and S is master secret */
         GET_SERVER_SECRET: function(S, SST) {
-            var A = new ctx.BIG(0),
-                B = new ctx.BIG(0),
-                QX, QY, Q, s;
+            var s,Q;
 
-            A.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
-            B.rcopy(ctx.ROM_CURVE.CURVE_Pxb);
-            QX = new ctx.FP2(0);
-            QX.bset(A, B);
-            A.rcopy(ctx.ROM_CURVE.CURVE_Pya);
-            B.rcopy(ctx.ROM_CURVE.CURVE_Pyb);
-            QY = new ctx.FP2(0);
-            QY.bset(A, B);
-
-            Q = new ctx.ECP2();
-            Q.setxy(QX, QY);
+            Q = ctx.ECP2.generator();
 
             s = ctx.BIG.fromBytes(S);
             Q = ctx.PAIR.G2mul(Q, s);
@@ -467,10 +448,6 @@ var MPIN = function(ctx) {
 
             if (rng != null) {
                 x = ctx.BIG.randomnum(r, rng);
-                //if (ROM.AES_S>0)
-                //{
-                //  x.mod2m(2*ROM.AES_S);
-                //}
                 x.toBytes(X);
             } else {
                 x = ctx.BIG.fromBytes(X);
@@ -518,10 +495,6 @@ var MPIN = function(ctx) {
             //  var q=new ctx.BIG(0); q.rcopy(ctx.ROM_FIELD.Modulus);
             if (rng !== null) {
                 x = ctx.BIG.randomnum(r, rng);
-                //if (ROM.AES_S>0)
-                //{
-                //  x.mod2m(2*ROM.AES_S);
-                //}
                 x.toBytes(X);
             } else {
                 x = ctx.BIG.fromBytes(X);
@@ -590,12 +563,10 @@ var MPIN = function(ctx) {
             py = ctx.BIG.fromBytes(Y);
             px.add(py);
             px.mod(r);
-            //  px.rsub(r);
 
             P = ctx.PAIR.G1mul(P, px);
             P.neg();
             P.toBytes(SEC);
-            //ctx.PAIR.G1mul(P,px).toBytes(SEC);
 
             return 0;
         },
@@ -608,35 +579,20 @@ var MPIN = function(ctx) {
 
             P.toBytes(HID);
             if (date !== 0) {
-                //if (HID!=null) P.toBytes(HID);
                 h = this.hashit(sha, date, h);
                 R = ctx.ECP.mapit(h);
                 P.add(R);
                 P.toBytes(HTID);
             }
-            //else P.toBytes(HID);
         },
 
         /* Implement step 1 of MPin protocol on server side. Pa is the client public key in case of DVS, otherwise must be set to null */
         SERVER_2: function(date, HID, HTID, Y, SST, xID, xCID, mSEC, E, F, Pa) {
-            var Q,
-                A, B, QX, QY,
-                sQ, R, y, P, g;
+            var Q, sQ, R, y, P, g;
 
             if (typeof Pa === "undefined" || Pa == null) {
-                A = new ctx.BIG(0);
-                B = new ctx.BIG(0);
-                A.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
-                B.rcopy(ctx.ROM_CURVE.CURVE_Pxb);
-                QX = new ctx.FP2(0);
-                QX.bset(A, B);
-                A.rcopy(ctx.ROM_CURVE.CURVE_Pya);
-                B.rcopy(ctx.ROM_CURVE.CURVE_Pyb);
-                QY = new ctx.FP2(0);
-                QY.bset(A, B);
+                Q = ctx.ECP2.generator();
 
-                Q = new ctx.ECP2();
-                Q.setxy(QX, QY);
             } else {
                 Q = ctx.ECP2.fromBytes(Pa);
                 if (Q.is_infinity()) {
@@ -787,10 +743,6 @@ var MPIN = function(ctx) {
             q.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
             y.mod(q);
-            //if (ROM.AES_S>0)
-            //{
-            //  y.mod2m(2*ROM.AES_S);
-            //}
             y.toBytes(Y);
 
             return 0;
@@ -866,7 +818,7 @@ var MPIN = function(ctx) {
 
         /* Functions to support M-Pin Full */
         PRECOMPUTE: function(TOKEN, CID, G1, G2) {
-            var P, T, g, A, B, QX, QY, Q;
+            var P, T, g, Q;
 
             T = ctx.ECP.fromBytes(TOKEN);
             if (T.is_infinity()) {
@@ -874,20 +826,7 @@ var MPIN = function(ctx) {
             }
 
             P = ctx.ECP.mapit(CID);
-
-            A = new ctx.BIG(0);
-            B = new ctx.BIG(0);
-            A.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
-            B.rcopy(ctx.ROM_CURVE.CURVE_Pxb);
-            QX = new ctx.FP2(0);
-            QX.bset(A, B);
-            A.rcopy(ctx.ROM_CURVE.CURVE_Pya);
-            B.rcopy(ctx.ROM_CURVE.CURVE_Pyb);
-            QY = new ctx.FP2(0);
-            QY.bset(A, B);
-
-            Q = new ctx.ECP2();
-            Q.setxy(QX, QY);
+            Q = ctx.ECP2.generator();
 
             g = ctx.PAIR.ate(Q, T);
             g = ctx.PAIR.fexp(g);
@@ -965,13 +904,8 @@ var MPIN = function(ctx) {
 
             W = ctx.PAIR.G1mul(W, x);
 
-            //  var fa=new ctx.BIG(0); fa.rcopy(ctx.ROM_FIELD.Fra);
-            //  var fb=new ctx.BIG(0); fb.rcopy(ctx.ROM_FIELD.Frb);
-            //  var f=new ctx.FP2(fa,fb); //f.bset(fa,fb);
-
             r = new ctx.BIG(0);
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
-            //  var q=new ctx.BIG(0); q.rcopy(ctx.ROM_FIELD.Modulus);
 
             z.add(h);
             z.mod(r);
@@ -980,31 +914,10 @@ var MPIN = function(ctx) {
             g1.mul(g2);
 
             c = g1.compow(z, r);
-            // var m=new ctx.BIG(q);
-            // m.mod(r);
-
-            // var a=new ctx.BIG(z);
-            // a.mod(m);
-
-            // var b=new ctx.BIG(z);
-            // b.div(m);
-
-
-            // var c=g1.trace();
-            // g2.copy(g1);
-            // g2.frob(f);
-            // var cp=g2.trace();
-            // g1.conj();
-            // g2.mul(g1);
-            // var cpm1=g2.trace();
-            // g2.mul(g1);
-            // var cpm2=g2.trace();
-
-            // c=c.xtr_pow2(cp,cpm1,cpm2,a,b);
 
             t = this.mpin_hash(sha, c, W);
 
-            for (i = 0; i < this.PAS; i++) {
+            for (i = 0; i < ctx.ECP.AESKEY; i++) {
                 CK[i] = t[i];
             }
 
@@ -1057,7 +970,7 @@ var MPIN = function(ctx) {
 
             t = this.mpin_hash(sha, c, U);
 
-            for (i = 0; i < this.PAS; i++) {
+            for (i = 0; i < ctx.ECP.AESKEY; i++) {
                 SK[i] = t[i];
             }
 
@@ -1072,7 +985,7 @@ var MPIN = function(ctx) {
         */
         GET_DVS_KEYPAIR: function(rng, Z, Pa) {
             var r = new ctx.BIG(0),
-                z, A, B, QX, QY, Q;
+                z, Q;
 
             r.rcopy(ctx.ROM_CURVE.CURVE_Order);
 
@@ -1084,22 +997,7 @@ var MPIN = function(ctx) {
             }
             z.invmodp(r);
 
-            A = new ctx.BIG(0);
-            B = new ctx.BIG(0);
-            A.rcopy(ctx.ROM_CURVE.CURVE_Pxa);
-            B.rcopy(ctx.ROM_CURVE.CURVE_Pxb);
-            QX = new ctx.FP2(0);
-            QX.bset(A, B);
-            A.rcopy(ctx.ROM_CURVE.CURVE_Pya);
-            B.rcopy(ctx.ROM_CURVE.CURVE_Pyb);
-            QY = new ctx.FP2(0);
-            QY.bset(A, B);
-
-            Q = new ctx.ECP2();
-            Q.setxy(QX, QY);
-            if (Q.INF) {
-                return MPIN.INVALID_POINT;
-            }
+            Q = ctx.ECP2.generator();
 
             Q = ctx.PAIR.G2mul(Q, z);
             Q.toBytes(Pa);
@@ -1112,5 +1010,7 @@ var MPIN = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.MPIN = MPIN;
+    module.exports = {
+        MPIN: MPIN
+    };
 }

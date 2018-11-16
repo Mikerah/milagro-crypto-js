@@ -41,8 +41,9 @@ var GCM = function(ctx) {
 
     var GCM = function() {
         this.table = new Array(128);
+        /* 2k bytes */
         for (var i = 0; i < 128; i++) {
-            this.table[i] = new Array(4); /* 2k bytes */
+            this.table[i] = new Array(4);
         }
         this.stateX = [];
         this.Y_0 = [];
@@ -82,12 +83,14 @@ var GCM = function(ctx) {
                 }
 
                 if (c !== 0) {
-                    this.table[i][0] ^= 0xE1000000; /* irreducible polynomial */
+                    /* irreducible polynomial */
+                    this.table[i][0] ^= 0xE1000000;
                 }
             }
         },
 
-        gf2mul: function() { /* gf2m mul - Z=H*X mod 2^128 */
+        /* gf2m mul - Z=H*X mod 2^128 */
+        gf2mul: function() {
             var P = [],
                 b = [],
                 i, j, m, k, c;
@@ -121,7 +124,8 @@ var GCM = function(ctx) {
             }
         },
 
-        wrap: function() { /* Finish off GHASH */
+        /* Finish off GHASH */
+        wrap: function() {
             var F = [],
                 L = [],
                 b = [],
@@ -149,7 +153,8 @@ var GCM = function(ctx) {
         },
 
         /* Initialize GCM mode */
-        init: function(nk, key, niv, iv) { /* iv size niv is usually 12 bytes (96 bits). ctx.AES key size nk can be 16,24 or 32 bytes */
+        /* iv size niv is usually 12 bytes (96 bits). ctx.AES key size nk can be 16,24 or 32 bytes */
+        init: function(nk, key, niv, iv) {
             var H = [],
                 b = [],
                 i;
@@ -160,11 +165,13 @@ var GCM = function(ctx) {
             }
 
             this.a.init(ctx.AES.ECB, nk, key, iv);
-            this.a.ecb_encrypt(H); /* E(K,0) */
+            /* E(K,0) */
+            this.a.ecb_encrypt(H);
             this.precompute(H);
 
             this.lenA[0] = this.lenC[0] = this.lenA[1] = this.lenC[1] = 0;
 
+            /* initialize IV */
             if (niv == 12) {
                 for (i = 0; i < 12; i++) {
                     this.a.f[i] = iv[i];
@@ -174,14 +181,15 @@ var GCM = function(ctx) {
                 this.a.f[12] = b[0];
                 this.a.f[13] = b[1];
                 this.a.f[14] = b[2];
-                this.a.f[15] = b[3]; /* initialise IV */
+                this.a.f[15] = b[3];
 
                 for (i = 0; i < 16; i++) {
                     this.Y_0[i] = this.a.f[i];
                 }
             } else {
                 this.status = GCM.ACCEPTING_CIPHER;
-                this.ghash(iv, niv); /* GHASH(H,0,IV) */
+                /* GHASH(H,0,IV) */
+                this.ghash(iv, niv);
                 this.wrap();
 
                 for (i = 0; i < 16; i++) {
@@ -197,7 +205,8 @@ var GCM = function(ctx) {
         },
 
         /* Add Header data - included but not encrypted */
-        add_header: function(header, len) { /* Add some header. Won't be encrypted, but will be authenticated. len is length of header */
+        /* len is length of header */
+        add_header: function(header, len) {
             var i, j = 0;
 
             if (this.status != GCM.ACCEPTING_HEADER) {
@@ -272,6 +281,7 @@ var GCM = function(ctx) {
             }
 
             while (j < len) {
+                /* increment counter */
                 b[0] = this.a.f[12];
                 b[1] = this.a.f[13];
                 b[2] = this.a.f[14];
@@ -282,13 +292,14 @@ var GCM = function(ctx) {
                 this.a.f[12] = b[0];
                 this.a.f[13] = b[1];
                 this.a.f[14] = b[2];
-                this.a.f[15] = b[3]; /* increment counter */
+                this.a.f[15] = b[3];
 
                 for (i = 0; i < 16; i++) {
                     B[i] = this.a.f[i];
                 }
 
-                this.a.ecb_encrypt(B); /* encrypt it  */
+                /* encrypt it  */
+                this.a.ecb_encrypt(B);
 
                 for (i = 0; i < 16 && j < len; i++) {
                     cipher[j] = (plain[j] ^ B[i]);
@@ -328,6 +339,7 @@ var GCM = function(ctx) {
             }
 
             while (j < len) {
+                /* increment counter */
                 b[0] = this.a.f[12];
                 b[1] = this.a.f[13];
                 b[2] = this.a.f[14];
@@ -338,13 +350,14 @@ var GCM = function(ctx) {
                 this.a.f[12] = b[0];
                 this.a.f[13] = b[1];
                 this.a.f[14] = b[2];
-                this.a.f[15] = b[3]; /* increment counter */
+                this.a.f[15] = b[3];
 
                 for (i = 0; i < 16; i++) {
                     B[i] = this.a.f[i];
                 }
 
-                this.a.ecb_encrypt(B); /* encrypt it  */
+                /* encrypt it  */
+                this.a.ecb_encrypt(B);
 
                 for (i = 0; i < 16 && j < len; i++) {
                     oc = cipher[j];
@@ -370,14 +383,15 @@ var GCM = function(ctx) {
         },
 
         /* Finish and extract Tag */
-        finish: function(extract) { /* Finish off GHASH and extract tag (MAC) */
+        finish: function(extract) {
             var tag = [],
                 i;
 
             this.wrap();
             /* extract tag */
             if (extract) {
-                this.a.ecb_encrypt(this.Y_0); /* E(K,Y0) */
+                /* E(K,Y0) */
+                this.a.ecb_encrypt(this.Y_0);
 
                 for (i = 0; i < 16; i++) {
                     this.Y_0[i] ^= this.stateX[i];
@@ -397,11 +411,13 @@ var GCM = function(ctx) {
 
     };
 
-    GCM.pack = function(b) { /* pack 4 bytes into a 32-bit Word */
+    /* pack 4 bytes into a 32-bit Word */
+    GCM.pack = function(b) {
         return (((b[0]) & 0xff) << 24) | ((b[1] & 0xff) << 16) | ((b[2] & 0xff) << 8) | (b[3] & 0xff);
     };
 
-    GCM.unpack = function(a) { /* unpack bytes from a word */
+    /* unpack bytes from a word */
+    GCM.unpack = function(a) {
         var b = [];
 
         b[3] = (a & 0xff);
@@ -428,5 +444,7 @@ var GCM = function(ctx) {
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-    module.exports.GCM = GCM;
+    module.exports = {
+        GCM: GCM
+    };
 }

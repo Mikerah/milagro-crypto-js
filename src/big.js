@@ -17,10 +17,10 @@
     under the License.
 */
 
+/* AMCL BIG number class */
 var BIG,
     DBIG;
 
-/* AMCL BIG number class */
 BIG = function(ctx) {
     "use strict";
 
@@ -202,7 +202,8 @@ BIG = function(ctx) {
         fshr: function(k) {
             var r, i;
 
-            r = this.w[0] & ((1 << k) - 1); /* shifted out part */
+            /* shifted out part */
+            r = this.w[0] & ((1 << k) - 1);
 
             for (i = 0; i < BIG.NLEN - 1; i++) {
                 this.w[i] = (this.w[i] >> k) | ((this.w[i + 1] << (BIG.BASEBITS - k)) & BIG.BMASK);
@@ -244,7 +245,8 @@ BIG = function(ctx) {
 
             this.w[0] = (this.w[0] << k) & BIG.BMASK;
 
-            return (this.w[BIG.NLEN - 1] >> ((8 * BIG.MODBYTES) % BIG.BASEBITS)); /* return excess - only used in FF.java */
+            /* return excess - only used in ff.js */
+            return (this.w[BIG.NLEN - 1] >> ((8 * BIG.MODBYTES) % BIG.BASEBITS));
         },
 
         /* General shift left by k bits */
@@ -335,6 +337,19 @@ BIG = function(ctx) {
 
             return this;
         },
+
+
+        /* this|=y */
+        or: function(y) {
+            var i;
+
+            for (i = 0; i < BIG.NLEN; i++) {
+                this.w[i] |= y.w[i];
+            }
+
+            return this;
+        },
+
 
         /* return this+x */
         plus: function(x) {
@@ -439,8 +454,6 @@ BIG = function(ctx) {
         pmul: function(c) {
             var carry = 0,
                 ak, i;
-
-            //  this.norm();
 
             for (i = 0; i < BIG.NLEN; i++) {
                 ak = this.w[i];
@@ -560,12 +573,6 @@ BIG = function(ctx) {
                 r.norm();
                 this.cmove(r, (1 - ((r.w[BIG.NLEN - 1] >> (BIG.CHUNK - 1)) & 1)));
 
-                // if (BIG.comp(this,m)>=0)
-                // {
-                //     this.sub(m);
-                //     this.norm();
-                // }
-
                 k--;
             }
         },
@@ -600,14 +607,6 @@ BIG = function(ctx) {
                 r.add(e);
                 r.norm();
                 this.cmove(r, d);
-
-                // if (BIG.comp(b,m)>=0)
-                // {
-                //     this.add(e);
-                //     this.norm();
-                //     b.sub(m);
-                //     b.norm();
-                // }
 
                 k--;
             }
@@ -712,21 +711,21 @@ BIG = function(ctx) {
 
             while (BIG.comp(u, one) !== 0 && BIG.comp(v, one) !== 0) {
                 while (u.parity() === 0) {
-                    u.shr(1);
+                    u.fshr(1);
                     if (x1.parity() !== 0) {
                         x1.add(p);
                         x1.norm();
                     }
-                    x1.shr(1);
+                    x1.fshr(1);
                 }
 
                 while (v.parity() === 0) {
-                    v.shr(1);
+                    v.fshr(1);
                     if (x2.parity() !== 0) {
                         x2.add(p);
                         x2.norm();
                     }
-                    x2.shr(1);
+                    x2.fshr(1);
                 }
 
                 if (BIG.comp(u, v) >= 0) {
@@ -799,7 +798,6 @@ BIG = function(ctx) {
         for (i = 0; i < BIG.MODBYTES; i++) {
             m.fshl(8);
             m.w[0] += b[i + n] & 0xff;
-            //m.inc(b[i]&0xff);
         }
 
         return m;
@@ -863,7 +861,7 @@ BIG = function(ctx) {
 
             b = r & 1;
             m.shl(1);
-            m.w[0] += b; // m.inc(b);
+            m.w[0] += b;
             j++;
             j &= 7;
         }
@@ -896,58 +894,11 @@ BIG = function(ctx) {
         return m;
     };
 
-    /* return NAF value as +/- 1, 3 or 5. x and x3 should be normed.
-    nbs is number of bits processed, and nzs is number of trailing 0s detected */
-    /*
-    BIG.nafbits=function(x,x3,i)
-    {
-        var n=[];
-        var nb=x3.bit(i)-x.bit(i);
-        var j;
-        n[1]=1;
-        n[0]=0;
-        if (nb===0) {n[0]=0; return n;}
-        if (i===0) {n[0]=nb; return n;}
-        if (nb>0) n[0]=1;
-        else      n[0]=(-1);
-
-        for (j=i-1;j>0;j--)
-        {
-            n[1]++;
-            n[0]*=2;
-            nb=x3.bit(j)-x.bit(j);
-            if (nb>0) n[0]+=1;
-            if (nb<0) n[0]-=1;
-            if (n[0]>5 || n[0]<-5) break;
-        }
-
-        if (n[0]%2!==0 && j!==0)
-        { // backtrack
-            if (nb>0) n[0]=(n[0]-1)/2;
-            if (nb<0) n[0]=(n[0]+1)/2;
-            n[1]--;
-        }
-        while (n[0]%2===0)
-        { // remove trailing zeros
-            n[0]/=2;
-            n[2]++;
-            n[1]--;
-        }
-        return n;
-    };
-    */
-
     /* return a*b as ctx.DBIG */
     BIG.mul = function(a, b) {
         var c = new ctx.DBIG(0),
             d = [],
             n, s, t, i, k, co;
-
-        //  a.norm();
-        //  b.norm();
-
-        //if (!a.isok()) alert("Problem in mul a");
-        //if (!b.isok()) alert("Problem in mul b");
 
         for (i = 0; i < BIG.NLEN; i++) {
             d[i] = a.w[i] * b.w[i];
@@ -982,27 +933,6 @@ BIG = function(ctx) {
         }
         c.w[BIG.DNLEN - 1] = co;
 
-        // for (var j=0;j<BIG.NLEN;j++)
-        // {
-        //     t=0; for (var i=0;i<=j;i++) t+=a.w[j-i]*b.w[i];
-        //     c.w[j]=t;
-        // }
-        // for (var j=BIG.NLEN;j<BIG.DNLEN-2;j++)
-        // {
-        //     t=0; for (var i=j-BIG.NLEN+1;i<BIG.NLEN;i++) t+=a.w[j-i]*b.w[i];
-        //     c.w[j]=t;
-        // }
-        // t=a.w[BIG.NLEN-1]*b.w[BIG.NLEN-1];
-        // c.w[BIG.DNLEN-2]=t;
-        // var co=0;
-        // for (var i=0;i<BIG.DNLEN-1;i++)
-        // {
-        //     n=c.w[i]+co;
-        //     c.w[i]=n&BIG.BMASK;
-        //     co=(n-c.w[i])*BIG.MODINV;
-        // }
-        // c.w[BIG.DNLEN-1]=co;
-
         return c;
     };
 
@@ -1010,9 +940,6 @@ BIG = function(ctx) {
     BIG.sqr = function(a) {
         var c = new ctx.DBIG(0),
             n, t, j, i, co;
-        //  a.norm();
-
-        //if (!a.isok()) alert("Problem in sqr");
 
         c.w[0] = a.w[0] * a.w[0];
 
@@ -1411,12 +1338,6 @@ DBIG = function(ctx) {
                 dr.norm();
                 this.cmove(dr, (1 - ((dr.w[ctx.BIG.DNLEN - 1] >> (ctx.BIG.CHUNK - 1)) & 1)));
 
-                // if (DBIG.comp(this,m)>=0)
-                // {
-                //     this.sub(m);
-                //     this.norm();
-                // }
-
                 k--;
             }
 
@@ -1457,14 +1378,6 @@ DBIG = function(ctx) {
                 r.add(e);
                 r.norm();
                 a.cmove(r, d);
-
-                // if (DBIG.comp(this,m)>0)
-                // {
-                //     a.add(e);
-                //     a.norm();
-                //     this.sub(m);
-                //     this.norm();
-                // }
 
                 k--;
             }

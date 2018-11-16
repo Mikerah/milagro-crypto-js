@@ -46,7 +46,7 @@ var Z = [];
 var Pa = [];
 var U = [];
 
-var sha = ctx.MPIN.HASH_TYPE;
+var sha = ctx.ECP.HASH_TYPE;
 
 /* Trusted Authority set-up */
 ctx.MPIN.RANDOM_GENERATE(rng, S);

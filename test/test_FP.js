@@ -28,59 +28,51 @@ var CTX = require("../index");
 
 var expect = chai.expect;
 
-var fp_curves = ['ED25519', 'GOLDILOCKS', 'NIST256', 'BRAINPOOL', 'ANSSI', 'HIFIVE', 'NIST384', 'C41417', 'NIST521', 'NUMS256W',
-    'NUMS256E', 'NUMS384W', 'NUMS512W', 'BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'
+var fp_curves = ['ED25519', 'GOLDILOCKS', 'NIST256', 'BRAINPOOL', 'ANSSI', 'HIFIVE', 'NIST384', 'C41417', 'SECP256K1', 'NIST521', 'NUMS256W',
+    'NUMS256E', 'NUMS384W', 'NUMS512W', 'BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24', 'BLS48'
 ];
 
 var readBIG = function(string, ctx) {
-    while (string.length != ctx.BIG.MODBYTES*2) string = "00"+string;
-    return ctx.BIG.fromBytes(new Buffer(string, "hex"));
+    while (string.length != ctx.BIG.MODBYTES*2){string = "00"+string;}
+    return ctx.BIG.fromBytes(Buffer.from(string, "hex"));
 }
 
 var readFP = function(string, ctx) {
-    var fp = new ctx.FP(0);
-    var big = readBIG(string, ctx);
-    fp.bcopy(big);
-
-    return fp;
+    return new ctx.FP(readBIG(string, ctx));
 }
 describe('TEST FP ARITHMETIC', function() {
 
-	var j = 0;
+    fp_curves.forEach(function(curve){
 
-    for (var i = 0; i < fp_curves.length; i++) {
-
-
-        it('test '+fp_curves[i], function(done) {
+        it('test '+ curve, function(done) {
             this.timeout(0);
-            var ctx = new CTX(fp_curves[j]);
+
+            var ctx = new CTX(curve);
 
             // Select appropriate field for the curve
             var  field = ctx.config["FIELD"];
-            if (fp_curves[j] == 'NUMS256E') {
+            if (curve == 'NUMS256E') {
                 field = field+"E";
             }
-            if (fp_curves[j] == 'NUMS256W') {
+            if (curve == 'NUMS256W') {
                 field = field+"W";
             }
-            j++;
 
             var vectors = require('../testVectors/fp/'+field+'.json');
 
-            for (var k = 0; k <= vectors.length - 1; k++) {
+            vectors.forEach(function(vector) {
 
             	// test commutativity of addition
-                var fp1 = readFP(vectors[k].FP1,ctx);
-                var fp2 = readFP(vectors[k].FP2,ctx);
-                var fpadd = readFP(vectors[k].FPadd,ctx);
+                var fp1 = readFP(vector.FP1,ctx);
+                var fp2 = readFP(vector.FP2,ctx);
+                var fpadd = readFP(vector.FPadd,ctx);
                 var a1 = new ctx.FP(0);
                 var a2 = new ctx.FP(0);
                 a1.copy(fp1);
-                a2.copy(fp2);
-                a1.add(a2);
+                a1.add(fp2);
                 expect(a1.toString()).to.equal(fpadd.toString());
-                a1.copy(fp1);
-                a2.add(a1);
+                a2.copy(fp2);
+                a2.add(fp1);
 				expect(a2.toString()).to.equal(fpadd.toString());
 
 				// test associativity of addition
@@ -91,25 +83,20 @@ describe('TEST FP ARITHMETIC', function() {
 	            expect(a1.toString()).to.equal(a2.toString());
 
 	            // test subtraction
-	            var fpsub = readFP(vectors[k].FPsub, ctx);
+	            var fpsub = readFP(vector.FPsub, ctx);
 	            a1.copy(fp1);
-	            a2.copy(fp2);
-	            a1.sub(a2);
-                a1.reduce();
+	            a1.sub(fp2);
 	            expect(a1.toString()).to.equal(fpsub.toString());
 
                 // test multiplication
-                var fpmul = readFP(vectors[k].FPmulmod, ctx);
+                var fpmul = readFP(vector.FPmulmod, ctx);
                 a1.copy(fp1);
-                a2.copy(fp2);
-                a1.mul(a2);
-                a1.reduce();
+                a1.mul(fp2);
                 expect(a1.toString()).to.equal(fpmul.toString());
 
                 // test small multiplication
-                var fpimul = readFP(vectors[k].FPsmallmul, ctx);
+                var fpimul = readFP(vector.FPsmallmul, ctx);
                 a2.imul(0);
-                a2.reduce();
                 expect(a2.iszilch()).to.equal(true);
                 for (var vi = 1; vi <= 10; vi++) {
                     a1.copy(fp1);
@@ -123,43 +110,37 @@ describe('TEST FP ARITHMETIC', function() {
                 expect(a1.toString()).to.equal(fpimul.toString());
 
                 // test square
-                var fpsqr = readFP(vectors[k].FPsqr, ctx);
+                var fpsqr = readFP(vector.FPsqr, ctx);
                 a1.copy(fp1);
                 a1.sqr();
-                a1.reduce();
                 expect(a1.toString()).to.equal(fpsqr.toString());
 
                 // test negative of a FP
-                var fpneg = readFP(vectors[k].FPneg, ctx);
+                var fpneg = readFP(vector.FPneg, ctx);
                 a1.copy(fp1);
                 a1.neg();
-                a1.reduce();
                 expect(a1.toString()).to.equal(fpneg.toString());
 
                 // test division by 2
-                var fpdiv2 = readFP(vectors[k].FPdiv2, ctx);
+                var fpdiv2 = readFP(vector.FPdiv2, ctx);
                 a1.copy(fp1);
                 a1.div2();
-                a1.reduce();
                 expect(a1.toString()).to.equal(fpdiv2.toString());
 
                 // test inverse
-                var fpinv = readFP(vectors[k].FPinv, ctx);
+                var fpinv = readFP(vector.FPinv, ctx);
                 a1.copy(fp1);
                 a1.inverse();
-                a1.reduce();
                 expect(a1.toString()).to.equal(fpinv.toString());
 
                 // test power
-                var fppow = readFP(vectors[k].FPexp, ctx);
+                var fppow = readFP(vector.FPexp, ctx);
                 a1.copy(fp1);
-                a2 = readBIG(vectors[k].FP2, ctx);
+                a2 = readBIG(vector.FP2, ctx);
                 a1 = a1.pow(a2);
-                a1.reduce();
                 expect(a1.toString()).to.equal(fppow.toString());
-            }
+            });
             done();
         });
-
-    }
+    });
 });

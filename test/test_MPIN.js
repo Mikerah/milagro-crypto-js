@@ -26,7 +26,7 @@ var chai = require('chai');
 var expect = chai.expect;
 
 // Curves for consistency test
-var pf_curves = ['BN254', 'BN254CX', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN'];
+var pf_curves = ['BN254', 'BN254CX', 'BLS381', 'BLS383', 'BLS461', 'FP256BN', 'FP512BN', 'BLS24', 'BLS48'];
 
 // Curves for test with test vectors
 var tv_curves = ['BN254CX'];
@@ -44,626 +44,278 @@ hextobytes = function(value_hex) {
     return byte_value;
 };
 
-for (var i = pf_curves.length - 1; i >= 0; i--) {
+pf_curves.forEach(function(curve) {
 
-    describe('TEST MPIN ' + pf_curves[i], function() {
+    describe('TEST MPIN ' + curve, function() {
 
-        var ctx = new CTX(pf_curves[i]);
+        var ctx = new CTX(curve),
+            rng = new ctx.RAND(),
+            MPIN, EGS, EFS, G1S, G2S,
+            S1 = [],
+            S2 = [],
+            SST1 = [],
+            SST2 = [],
+            TOKEN1 = [],
+            TOKEN2 = [],
+            PERMIT1 = [],
+            PERMIT2 = [],
+            SST = [],
+            TOKEN = [],
+            bakSECRET = [],
+            SECRET = [],
+            PERMIT = [],
+            SEC = [],
+            xID = [],
+            xCID = [],
+            X = [],
+            Y = [],
+            E = [],
+            F = [],
+            HCID = [],
+            rHCID = [],
+            HID = [],
+            HTID = [],
 
-        var rng = new ctx.RAND();
+            G1 = [],
+            G2 = [],
+            R = [],
+            Z = [],
+            W = [],
+            T = [],
+            CK = [],
+            SK = [],
 
-        var j = i;
+            sha = ctx.ECP.HASH_TYPE,
+
+            IDstr = "testUser@miracl.com",
+            pin = 1234,
+            pin2 = 2345,
+            CLIENT_ID, date;
+
+        if (ctx.ECP.CURVE_PAIRING_TYPE === 1 | ctx.ECP.CURVE_PAIRING_TYPE === 2) {
+            MPIN = ctx.MPIN;
+            G2S = 4 * MPIN.EFS;
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 3) {
+            MPIN = ctx.MPIN192;
+            G2S = 8 * MPIN.EFS;
+        } else if (ctx.ECP.CURVE_PAIRING_TYPE === 4) {
+            MPIN = ctx.MPIN256;
+            G2S = 16 * MPIN.EFS;
+        }
+        EGS = MPIN.EGS;
+        EFS = MPIN.EFS;
+        G1S = 2 * EFS + 1;
 
         before(function(done) {
+            this.timeout(0);
+
             var RAW = [];
             rng.clean();
-            for (i = 0; i < 100; i++) RAW[i] = i;
+            for (var j = 0; j < 100; j++) RAW[j] = j;
             rng.seed(100, RAW);
+
+            /* Trusted Authorities set-up */
+            MPIN.RANDOM_GENERATE(rng, S1);
+            MPIN.RANDOM_GENERATE(rng, S2);
+
+            /* Create Client Identity */
+            CLIENT_ID = MPIN.stringtobytes(IDstr);
+            HCID = MPIN.HASH_ID(sha, CLIENT_ID); /* Either Client or TA calculates Hash(ID) - you decide! */
+            ctx.ECP.mapit(HCID).toBytes(rHCID);
+
+            /* Client and Server are issued secrets by the DTAs */
+            MPIN.GET_SERVER_SECRET(S1, SST1);
+            MPIN.GET_SERVER_SECRET(S2, SST2);
+            MPIN.RECOMBINE_G2(SST1, SST2, SST);
+
+            MPIN.GET_CLIENT_SECRET(S1, HCID, TOKEN1);
+            MPIN.GET_CLIENT_SECRET(S2, HCID, TOKEN2);
+            MPIN.RECOMBINE_G1(TOKEN1, TOKEN2, TOKEN);
+
+            SECRET = TOKEN.slice();
+            MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
+            MPIN.PRECOMPUTE(TOKEN, HCID, G1, G2);
+
+            /* Client gets "Time Token" permit from DTA */
+            date = MPIN.today();
+            MPIN.GET_CLIENT_PERMIT(sha, date, S1, HCID, PERMIT1);
+            MPIN.GET_CLIENT_PERMIT(sha, date, S2, HCID, PERMIT2);
+            MPIN.RECOMBINE_G1(PERMIT1,PERMIT2,PERMIT);
+
+            /* This encoding makes Time permit look random - Elligator squared */
+            MPIN.ENCODING(rng, PERMIT);
+            MPIN.DECODING(PERMIT);
+
             done();
         });
 
-        it('test MPin', function(done) {
+        it('test extract/restore factors', function(done) {
+            bakSECRET = SECRET.slice();
+            MPIN.EXTRACT_FACTOR(sha, CLIENT_ID, pin%MPIN.MAXPIN,MPIN.PBLEN,SECRET);
+            MPIN.RESTORE_FACTOR(sha, CLIENT_ID, pin%MPIN.MAXPIN,MPIN.PBLEN,SECRET);
+            expect(MPIN.comparebytes(SECRET,bakSECRET)).to.be.true;
+            done();
+        })
+
+        it('test MPin (Full) One Pass', function(done) {
             this.timeout(0);
 
-            var i, res;
-            var result;
-
-            var EGS = ctx.MPIN.EGS;
-            var EFS = ctx.MPIN.EFS;
-            var EAS = 16;
-
-            var sha = ctx.MPIN.HASH_TYPE;
-
-            var G1S = 2 * EFS + 1; /* Group 1 Size */
-            var G2S = 4 * EFS; /* Group 2 Size */
-
-            var S = [];
-            var SST = [];
-            var TOKEN = [];
-            var PERMIT = [];
-            var SEC = [];
-            var xID = [];
-            var X = [];
-            var Y = [];
-            var HCID = [];
-            var HID = [];
-
-            var G1 = [];
-            var G2 = [];
-            var R = [];
-            var Z = [];
-            var W = [];
-            var T = [];
-            var CK = [];
-            var SK = [];
-
-            var HSID = [];
-
-            /* Set configuration */
-            var PINERROR = true;
-
-            /* Trusted Authority set-up */
-            ctx.MPIN.RANDOM_GENERATE(rng, S);
-
-            /* Create Client Identity */
-            var IDstr = "testUser@miracl.com";
-            var CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID); /* Either Client or TA calculates Hash(ID) - you decide! */
-
-            /* Client and Server are issued secrets by DTA */
-            ctx.MPIN.GET_SERVER_SECRET(S, SST);
-
-            ctx.MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
-
-            /* Client extracts PIN from secret to create Token */
-            var pin = 1234;
-            var rtn = ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
-            rtn=rtn+3
-            expect(rtn).to.be.equal(3);
-
-            var date = 0;
-            pin = 1234;
+            date = 0;
+            CK = [];
+            SK = [];
 
             var pxID = xID;
+            var pxCID = null;
             var pHID = HID;
+            var pHTID = null;
+            var pE = null;
+            var pF = null;
+            var pPERMIT = null;
+            var prHID = HCID;
 
-            var prHID;
-            prHID = pHID;
+            timeValue = MPIN.GET_TIME();
 
-            rtn = ctx.MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, null, null);
-            rtn = rtn+1
-            expect(rtn).to.be.equal(1);
+            rtn = MPIN.CLIENT(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT, timeValue, Y);
+            expect(rtn).to.be.equal(0);
+
+            MPIN.GET_G1_MULTIPLE(rng, 1, R, prHID, Z); /* Also Send Z=r.ID to Server, remember random r */
+
+            rtn = MPIN.SERVER(sha, date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, pE, pF, CLIENT_ID, timeValue);
+            expect(rtn).to.be.equal(0);
+
+            MPIN.GET_G1_MULTIPLE(rng, 1, W, prHID, T); /* Also send T=w.ID to client, remember random w  */
+
+            H = MPIN.HASH_ALL(sha, prHID, pxID, pxCID, SEC, Y, Z, T);
+            rtn = MPIN.CLIENT_KEY(sha, G1, G2, pin, R, X, H, T, CK);
+            expect(rtn).to.be.equal(0);
+
+            H = MPIN.HASH_ALL(sha, prHID, pxID, pxCID, SEC, Y, Z, T);
+            rtn = MPIN.SERVER_KEY(sha, Z, SST, W, H, pHID, pxID, pxCID, SK);
+            expect(rtn).to.be.equal(0);
+            expect(MPIN.bytestostring(CK)).to.be.equal(MPIN.bytestostring(SK));
+            done();
+        });
+
+        it('test MPin (Full) Two Pass', function(done) {
+            this.timeout(0);
+
+            /* Set configuration */
+            date = 0;
+            CK = [];
+            SK = [];
+
+            var pxID = xID;
+            var pxCID = null;
+            var pHID = HID;
+            var pHTID = null;
+            var pE = null;
+            var pF = null;
+            var pPERMIT = null;
+            var prHID = rHCID;
+
+            rtn = MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT);
+            expect(rtn).to.be.equal(0);
+
+            rtn = MPIN.GET_G1_MULTIPLE(rng, 0, R, prHID, Z); /* Also Send Z=r.ID to Server, remember random r */
+            expect(rtn).to.be.equal(0);
 
             /* Server calculates H(ID) and H(T|H(ID)) (if time permits enabled), and maps them to points on the curve HID and HTID resp. */
-            ctx.MPIN.SERVER_1(sha, date, CLIENT_ID, pHID, null);
+            MPIN.SERVER_1(sha, date, CLIENT_ID, pHID, pHTID);
 
             /* Server generates Random number Y and sends it to Client */
-            ctx.MPIN.RANDOM_GENERATE(rng, Y);
+            MPIN.RANDOM_GENERATE(rng, Y);
+
+            rtn = MPIN.GET_G1_MULTIPLE(rng, 0, W, prHID, T); /* Also send T=w.ID to client, remember random w  */
+            expect(rtn).to.be.equal(0);
 
             /* Client Second Pass: Inputs Client secret SEC, x and y. Outputs -(x+y)*SEC */
-            rtn = ctx.MPIN.CLIENT_2(X, Y, SEC);
-            rtn = rtn+2
-            expect(rtn).to.be.equal(2);
+            rtn = MPIN.CLIENT_2(X, Y, SEC);
+            expect(rtn).to.be.equal(0);
 
             /* Server Second pass. Inputs hashed client id, random Y, -(x+y)*SEC, xID and xCID and Server secret SST. E and F help kangaroos to find error. */
             /* If PIN error not required, set E and F = NULL */
-            rtn = ctx.MPIN.SERVER_2(date, pHID, null, Y, SST, pxID, null, SEC, null, null);
+            rtn = MPIN.SERVER_2(date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, pE, pF);
+            expect(rtn).to.be.equal(0);
 
-            rtn = rtn+4
-            expect(rtn).to.be.equal(4);
+            H = MPIN.HASH_ALL(sha, prHID, pxID, pxCID, SEC, Y, Z, T);
+            rtn = MPIN.CLIENT_KEY(sha, G1, G2, pin, R, X, H, T, CK);
+            expect(rtn).to.be.equal(0);
+
+            H = MPIN.HASH_ALL(sha, prHID, pxID, pxCID, SEC, Y, Z, T);
+            MPIN.SERVER_KEY(sha, Z, SST, W, H, pHID, pxID, pxCID, SK);
+            expect(MPIN.bytestostring(CK)).to.be.equal(MPIN.bytestostring(SK));
+            expect(rtn).to.be.equal(0);
+
             done();
         });
 
         it('test MPin Time Permits', function(done) {
             this.timeout(0);
-            var i, res;
-            var result;
 
-            var EGS = ctx.MPIN.EGS;
-            var EFS = ctx.MPIN.EFS;
-            var EAS = 16;
-
-            var sha = ctx.MPIN.HASH_TYPE;
-
-            var G1S = 2 * EFS + 1; /* Group 1 Size */
-            var G2S = 4 * EFS; /* Group 2 Size */
-
-            var S = [];
-            var SST = [];
-            var TOKEN = [];
-            var PERMIT = [];
-            var SEC = [];
-            var xID = [];
-            var xCID = [];
-            var X = [];
-            var Y = [];
-            var HCID = [];
-            var HID = [];
-            var HTID = [];
-
-            var HSID = [];
-
-            /* Trusted Authority set-up */
-            ctx.MPIN.RANDOM_GENERATE(rng, S);
-
-            /* Create Client Identity */
-            var IDstr = "testUser@miracl.com";
-            var CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID); /* Either Client or TA calculates Hash(ID) - you decide! */
-
-            /* Client and Server are issued secrets by DTA */
-            ctx.MPIN.GET_SERVER_SECRET(S, SST);
-            ctx.MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
-
-            /* Client extracts PIN from secret to create Token */
-            var pin = 1234;
-            var rtn = ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
-            expect(rtn).to.be.equal(0);
-
-            var date = ctx.MPIN.today();
-            /* Client gets "Time Token" permit from DTA */
-            ctx.MPIN.GET_CLIENT_PERMIT(sha, date, S, HCID, PERMIT);
-
-            /* This encoding makes Time permit look random - Elligator squared */
-            ctx.MPIN.ENCODING(rng, PERMIT);
-            ctx.MPIN.DECODING(PERMIT);
-
-            pin = 1234;
-
+            date = MPIN.today();
+            var pxID = null;
             var pxCID = xCID;
             var pHID = HID;
             var pHTID = HTID;
             var pPERMIT = PERMIT;
-            var prHID;
 
-            prHID = pHTID;
-
-            pxID = null;
-
-            rtn = ctx.MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT);
+            rtn = MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT);
             expect(rtn).to.be.equal(0);
 
             /* Server calculates H(ID) and H(T|H(ID)) (if time permits enabled), and maps them to points on the curve HID and HTID resp. */
-            ctx.MPIN.SERVER_1(sha, date, CLIENT_ID, pHID, pHTID);
+            MPIN.SERVER_1(sha, date, CLIENT_ID, pHID, pHTID);
 
             /* Server generates Random number Y and sends it to Client */
-            ctx.MPIN.RANDOM_GENERATE(rng, Y);
+            MPIN.RANDOM_GENERATE(rng, Y);
 
             /* Client Second Pass: Inputs Client secret SEC, x and y. Outputs -(x+y)*SEC */
-            rtn = ctx.MPIN.CLIENT_2(X, Y, SEC);
+            rtn = MPIN.CLIENT_2(X, Y, SEC);
             expect(rtn).to.be.equal(0);
 
             /* Server Second pass. Inputs hashed client id, random Y, -(x+y)*SEC, xID and xCID and Server secret SST. E and F help kangaroos to find error. */
             /* If PIN error not required, set E and F = NULL */
-            rtn = ctx.MPIN.SERVER_2(date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, null, null);
+            rtn = MPIN.SERVER_2(date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, null, null);
             expect(rtn).to.be.equal(0);
 
             done();
 
-        });
-
-        it('test MPin Full One Pass', function(done) {
-            this.timeout(0);
-            var i, res, result;
-
-            var EGS = ctx.MPIN.EGS;
-            var EFS = ctx.MPIN.EFS;
-            var EAS = 16;
-
-            var sha = ctx.MPIN.HASH_TYPE;
-
-            var G1S = 2 * EFS + 1; /* Group 1 Size */
-            var G2S = 4 * EFS; /* Group 2 Size */
-
-            var S = [];
-            var SST = [];
-            var TOKEN = [];
-            var PERMIT = [];
-            var SEC = [];
-            var xID = [];
-            var xCID = [];
-            var X = [];
-            var Y = [];
-            var E = [];
-            var F = [];
-            var HCID = [];
-            var HID = [];
-            var HTID = [];
-
-            var G1 = [];
-            var G2 = [];
-            var R = [];
-            var Z = [];
-            var W = [];
-            var T = [];
-            var CK = [];
-            var SK = [];
-
-            var HSID = [];
-
-            /* Trusted Authority set-up */
-            ctx.MPIN.RANDOM_GENERATE(rng, S);
-
-            /* Create Client Identity */
-            var IDstr = "testUser@miracl.com";
-            var CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID); /* Either Client or TA calculates Hash(ID) - you decide! */
-
-            /* Client and Server are issued secrets by DTA */
-            ctx.MPIN.GET_SERVER_SECRET(S, SST);
-
-            ctx.MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
-
-            /* Client extracts PIN from secret to create Token */
-            var pin = 1234;
-            var rtn = ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
-            expect(rtn).to.be.equal(0);
-
-            ctx.MPIN.PRECOMPUTE(TOKEN, HCID, G1, G2);
-
-            var date = 0;
-
-            pin = 1234;
-
-            var pxID = xID;
-            var pxCID = xCID;
-            var pHID = HID;
-            var pHTID = HTID;
-            var pE = E;
-            var pF = F;
-            var pPERMIT = PERMIT;
-            var prHID;
-
-            prHID = pHID;
-            pPERMIT = null;
-            pxCID = null;
-            pHTID = null;
-
-            pE = null;
-            pF = null;
-
-            timeValue = ctx.MPIN.GET_TIME();
-
-            rtn = ctx.MPIN.CLIENT(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT, timeValue, Y);
-            expect(rtn).to.be.equal(0);
-
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID);
-            ctx.MPIN.GET_G1_MULTIPLE(rng, 1, R, HCID, Z); /* Also Send Z=r.ID to Server, remember random r */
-
-            rtn = ctx.MPIN.SERVER(sha, date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, pE, pF, CLIENT_ID, timeValue);
-            expect(rtn).to.be.equal(0);
-
-            HSID = ctx.MPIN.HASH_ID(sha, CLIENT_ID);
-            ctx.MPIN.GET_G1_MULTIPLE(rng, 0, W, prHID, T); /* Also send T=w.ID to client, remember random w  */
-
-            H = ctx.MPIN.HASH_ALL(sha, HCID, pxID, pxCID, SEC, Y, Z, T);
-            ctx.MPIN.CLIENT_KEY(sha, G1, G2, pin, R, X, H, T, CK);
-
-            H = ctx.MPIN.HASH_ALL(sha, HSID, pxID, pxCID, SEC, Y, Z, T);
-            ctx.MPIN.SERVER_KEY(sha, Z, SST, W, H, pHID, pxID, pxCID, SK);
-            expect(ctx.MPIN.bytestostring(CK)).to.be.equal(ctx.MPIN.bytestostring(SK));
-
-            done();
-        });
-
-		it('test MPin bad token', function(done) {
-            this.timeout(0);
-            var i, res, result;
-
-            var EGS = ctx.MPIN.EGS;
-            var EFS = ctx.MPIN.EFS;
-            var EAS = 16;
-
-            var sha = ctx.MPIN.HASH_TYPE;
-
-            var G1S = 2 * EFS + 1; /* Group 1 Size */
-            var G2S = 4 * EFS; /* Group 2 Size */
-
-            var S = [];
-            var T = [];
-            var SST = [];
-            var TOKEN = [];
-            var PERMIT = [];
-            var SEC = [];
-            var xID = [];
-            var xCID = [];
-            var X = [];
-            var Y = [];
-            var HCID = [];
-            var HID = [];
-            var HTID = [];
-
-            var G1 = [];
-            var G2 = [];
-            var R = [];
-            var Z = [];
-            var W = [];
-            var T = [];
-            var CK = [];
-            var SK = [];
-
-            var HSID = [];
-
-            /* Trusted Authority set-up */
-            ctx.MPIN.RANDOM_GENERATE(rng, S);
-            ctx.MPIN.RANDOM_GENERATE(rng, T);
-
-            /* Create Client Identity */
-            var IDstr = "testUser@miracl.com";
-            var CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID); /* Either Client or TA calculates Hash(ID) - you decide! */
-
-            /* Client and Server are issued secrets by DTA */
-            ctx.MPIN.GET_SERVER_SECRET(S, SST);
-
-            ctx.MPIN.GET_CLIENT_SECRET(T, HCID, TOKEN);
-
-            /* Client extracts PIN from secret to create Token */
-            var pin = 1234;
-            var rtn = ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
-            expect(rtn).to.be.equal(0);
-
-            ctx.MPIN.PRECOMPUTE(TOKEN, HCID, G1, G2);
-
-            var date = 0;
-
-            pin = 1234;
-
-            var pxID = xID;
-            var pxCID = xCID;
-            var pHID = HID;
-            var pHTID = HTID;
-            var pPERMIT = PERMIT;
-            var prHID;
-
-            prHID = pHID;
-            pPERMIT = null;
-            pxCID = null;
-            pHTID = null;
-
-            timeValue = ctx.MPIN.GET_TIME();
-
-            rtn = ctx.MPIN.CLIENT(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT, timeValue, Y);
-            expect(rtn).to.be.equal(0);
-
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID);
-            ctx.MPIN.GET_G1_MULTIPLE(rng, 1, R, HCID, Z); /* Also Send Z=r.ID to Server, remember random r */
-
-            rtn = ctx.MPIN.SERVER(sha, date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, null, null, CLIENT_ID, timeValue);
-            expect(rtn).to.be.equal(ctx.MPIN.BAD_PIN);
-
-            done();
         });
 
       	it('test MPin bad PIN', function(done) {
             this.timeout(0);
-            var i, res, result;
 
-            var EGS = ctx.MPIN.EGS;
-            var EFS = ctx.MPIN.EFS;
-            var EAS = 16;
-
-            var sha = ctx.MPIN.HASH_TYPE;
-
-            var G1S = 2 * EFS + 1; /* Group 1 Size */
-            var G2S = 4 * EFS; /* Group 2 Size */
-
-            var S = [];
-            var SST = [];
-            var TOKEN = [];
-            var PERMIT = [];
-            var SEC = [];
-            var xID = [];
-            var xCID = [];
-            var X = [];
-            var Y = [];
-            var E = [];
-            var F = [];
-            var HCID = [];
-            var HID = [];
-            var HTID = [];
-
-            var G1 = [];
-            var G2 = [];
-            var R = [];
-            var Z = [];
-            var W = [];
-            var T = [];
-            var CK = [];
-            var SK = [];
-
-            var HSID = [];
-
-            /* Trusted Authority set-up */
-            ctx.MPIN.RANDOM_GENERATE(rng, S);
-
-            /* Create Client Identity */
-            var IDstr = "testUser@miracl.com";
-            var CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID); /* Either Client or TA calculates Hash(ID) - you decide! */
-
-            /* Client and Server are issued secrets by DTA */
-            ctx.MPIN.GET_SERVER_SECRET(S, SST);
-
-            ctx.MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
-
-            /* Client extracts PIN from secret to create Token */
-            var pin1 = 5555;
-            var pin2 = 4444;
-            var rtn = ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin1, TOKEN);
-            expect(rtn).to.be.equal(0);
-
-            ctx.MPIN.PRECOMPUTE(TOKEN, HCID, G1, G2);
-
-            var date = 0;
-
+            date = 0
             var pxID = xID;
-            var pxCID = xCID;
+            var pxCID = null;
             var pHID = HID;
-            var pHTID = HTID;
-            var pPERMIT = PERMIT;
-            var prHID;
+            var pHTID = null;
+            var pPERMIT = null;
 
-            prHID = pHID;
-            pPERMIT = null;
-            pxCID = null;
-            pHTID = null;
+            timeValue = MPIN.GET_TIME();
 
-            timeValue = ctx.MPIN.GET_TIME();
-
-            rtn = ctx.MPIN.CLIENT(sha, date, CLIENT_ID, rng, X, pin2, TOKEN, SEC, pxID, pxCID, pPERMIT, timeValue, Y);
+            rtn = MPIN.CLIENT(sha, date, CLIENT_ID, rng, X, pin2, TOKEN, SEC, pxID, pxCID, pPERMIT, timeValue, Y);
             expect(rtn).to.be.equal(0);
 
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID);
-            ctx.MPIN.GET_G1_MULTIPLE(rng, 1, R, HCID, Z); /* Also Send Z=r.ID to Server, remember random r */
-
-            rtn = ctx.MPIN.SERVER(sha, date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, E, F, CLIENT_ID, timeValue);
-            expect(rtn).to.be.equal(ctx.MPIN.BAD_PIN);
-
-            // Retrieve PIN error
-            rtn = ctx.MPIN.KANGAROO(E,F);
-            expect(rtn).to.be.equal(pin2-pin1);
+            rtn = MPIN.SERVER(sha, date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, E, F, CLIENT_ID, timeValue);
+            expect(rtn).to.be.equal(MPIN.BAD_PIN);
 
             done();
         });
 
-        it('test MPin FUll Two Pass', function(done) {
+        it('test MPin Kangaroo', function(done) {
             this.timeout(0);
-            var i, res;
-            var result;
 
-            var EGS = ctx.MPIN.EGS;
-            var EFS = ctx.MPIN.EFS;
-            var EAS = 16;
-
-            var sha = ctx.MPIN.HASH_TYPE;
-
-            var G1S = 2 * EFS + 1; /* Group 1 Size */
-            var G2S = 4 * EFS; /* Group 2 Size */
-
-            var S = [];
-            var SST = [];
-            var TOKEN = [];
-            var PERMIT = [];
-            var SEC = [];
-            var xID = [];
-            var xCID = [];
-            var X = [];
-            var Y = [];
-            var E = [];
-            var F = [];
-            var HCID = [];
-            var HID = [];
-            var HTID = [];
-
-            var G1 = [];
-            var G2 = [];
-            var R = [];
-            var Z = [];
-            var W = [];
-            var T = [];
-            var CK = [];
-            var SK = [];
-
-            var HSID = [];
-
-            /* Set configuration */
-            var PERMITS = true;
-
-            /* Trusted Authority set-up */
-            ctx.MPIN.RANDOM_GENERATE(rng, S);
-
-            /* Create Client Identity */
-            var IDstr = "testUser@miracl.com";
-            var CLIENT_ID = ctx.MPIN.stringtobytes(IDstr);
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID); /* Either Client or TA calculates Hash(ID) - you decide! */
-
-            /* Client and Server are issued secrets by DTA */
-            ctx.MPIN.GET_SERVER_SECRET(S, SST);
-            ctx.MPIN.GET_CLIENT_SECRET(S, HCID, TOKEN);
-
-            /* Client extracts PIN from secret to create Token */
-            var pin = 1234;
-            var rtn = ctx.MPIN.EXTRACT_PIN(sha, CLIENT_ID, pin, TOKEN);
-            expect(rtn).to.be.equal(0);
-
-            ctx.MPIN.PRECOMPUTE(TOKEN, HCID, G1, G2);
-
-            var date;
-            if (PERMITS) {
-                date = ctx.MPIN.today();
-                /* Client gets "Time Token" permit from DTA */
-                ctx.MPIN.GET_CLIENT_PERMIT(sha, date, S, HCID, PERMIT);
-
-                /* This encoding makes Time permit look random - Elligator squared */
-                ctx.MPIN.ENCODING(rng, PERMIT);
-                ctx.MPIN.DECODING(PERMIT);
-            } else date = 0;
-
-            pin = 1234;
-
-            var pxID = xID;
-            var pxCID = xCID;
-            var pHID = HID;
-            var pHTID = HTID;
-            var pE = E;
-            var pF = F;
-            var pPERMIT = PERMIT;
-            var prHID;
-
-            if (date != 0) {
-                prHID = pHTID;
-                pxID = null;
-            } else {
-                prHID = pHID;
-                pPERMIT = null;
-                pxCID = null;
-                pHTID = null;
-            }
-            pE = null;
-            pF = null;
-
-            rtn = ctx.MPIN.CLIENT_1(sha, date, CLIENT_ID, rng, X, pin, TOKEN, SEC, pxID, pxCID, pPERMIT);
-            expect(rtn).to.be.equal(0);
-
-            HCID = ctx.MPIN.HASH_ID(sha, CLIENT_ID);
-            ctx.MPIN.GET_G1_MULTIPLE(rng, 1, R, HCID, Z); /* Also Send Z=r.ID to Server, remember random r */
-
-            /* Server calculates H(ID) and H(T|H(ID)) (if time permits enabled), and maps them to points on the curve HID and HTID resp. */
-            ctx.MPIN.SERVER_1(sha, date, CLIENT_ID, pHID, pHTID);
-
-            /* Server generates Random number Y and sends it to Client */
-            ctx.MPIN.RANDOM_GENERATE(rng, Y);
-
-            HSID = ctx.MPIN.HASH_ID(sha, CLIENT_ID);
-            ctx.MPIN.GET_G1_MULTIPLE(rng, 0, W, prHID, T); /* Also send T=w.ID to client, remember random w  */
-
-            /* Client Second Pass: Inputs Client secret SEC, x and y. Outputs -(x+y)*SEC */
-            rtn = ctx.MPIN.CLIENT_2(X, Y, SEC);
-            expect(rtn).to.be.equal(0);
-
-            /* Server Second pass. Inputs hashed client id, random Y, -(x+y)*SEC, xID and xCID and Server secret SST. E and F help kangaroos to find error. */
-            /* If PIN error not required, set E and F = NULL */
-            rtn = ctx.MPIN.SERVER_2(date, pHID, pHTID, Y, SST, pxID, pxCID, SEC, pE, pF);
-            expect(rtn).to.be.equal(0);
-
-            H = ctx.MPIN.HASH_ALL(sha, HCID, pxID, pxCID, SEC, Y, Z, T);
-            ctx.MPIN.CLIENT_KEY(sha, G1, G2, pin, R, X, H, T, CK);
-
-            H = ctx.MPIN.HASH_ALL(sha, HSID, pxID, pxCID, SEC, Y, Z, T);
-            ctx.MPIN.SERVER_KEY(sha, Z, SST, W, H, pHID, pxID, pxCID, SK);
-            expect(ctx.MPIN.bytestostring(CK)).to.be.equal(ctx.MPIN.bytestostring(SK));
+            /* Retrieve PIN error from bad PIN test*/
+            rtn = MPIN.KANGAROO(E,F);
+            expect(rtn).to.be.equal(pin2-pin);
 
             done();
         });
 
-      if (tv_curves.indexOf(pf_curves[i]) != -1) {
-        it('test Combine Shares in G1 ' + pf_curves[i] + ' with Test Vectors', function(done) {
-            this.timeout(0);
-            // Load test vectors
-            var vectors = require('../testVectors/mpin/MPIN_' + pf_curves[j] + '.json');
+        if (tv_curves.indexOf(curve) != -1) {
 
-            var sha = ctx.MPIN.HASH_TYPE;
+            var vectors = require('../testVectors/mpin/MPIN_' + curve + '.json');
+            var sha = ctx.ECP.HASH_TYPE;
             var CS = [];
             var TP = [];
             var TP1bytes = [];
@@ -673,67 +325,66 @@ for (var i = pf_curves.length - 1; i >= 0; i--) {
             var CS2bytes = [];
             var CSbytes = [];
 
-            for (var vector in vectors) {
+            it('test Combine Shares in G1 ' + curve + ' with Test Vectors', function(done) {
+                this.timeout(0);
 
-                  CS1bytes = hextobytes(vectors[vector].CS1);
-                  CS2bytes = hextobytes(vectors[vector].CS2);
-                  CSbytes = hextobytes(vectors[vector].CLIENT_SECRET);
-                  ctx.MPIN.RECOMBINE_G1(CS1bytes, CS2bytes, CS);
-                  expect(ctx.MPIN.comparebytes(CS,CSbytes)).to.be.equal(true);
+                vectors.forEach(function(vector) {
+                    CS1bytes = hextobytes(vector.CS1);
+                    CS2bytes = hextobytes(vector.CS2);
+                    CSbytes = hextobytes(vector.CLIENT_SECRET);
+                    MPIN.RECOMBINE_G1(CS1bytes, CS2bytes, CS);
+                    expect(MPIN.comparebytes(CS,CSbytes)).to.be.equal(true);
 
-                  TP1bytes = hextobytes(vectors[vector].TP1);
-                  TP2bytes = hextobytes(vectors[vector].TP2);
-                  TPbytes = hextobytes(vectors[vector].TIME_PERMIT);
-                  ctx.MPIN.RECOMBINE_G1(TP1bytes, TP2bytes, TP);
-                  expect(ctx.MPIN.comparebytes(TP,TPbytes)).to.be.equal(true);
-            }
-            done();
-        });
+                    TP1bytes = hextobytes(vector.TP1);
+                    TP2bytes = hextobytes(vector.TP2);
+                    TPbytes = hextobytes(vector.TIME_PERMIT);
+                    MPIN.RECOMBINE_G1(TP1bytes, TP2bytes, TP);
+                    expect(MPIN.comparebytes(TP,TPbytes)).to.be.equal(true);
+                });
 
-        it('test MPin Two Passes ' + pf_curves[i] + ' with Test Vectors', function(done) {
-            this.timeout(0);
-            // Load test vectors
-            var vectors = require('../testVectors/mpin/MPIN_' + pf_curves[j] + '.json');
+                done();
+            });
 
-            var sha = ctx.MPIN.HASH_TYPE;
-            var xID = [];
-            var xCID = [];
-            var SEC = [];
-            var Y = [];
+            it('test MPin Two Passes ' + curve + ' with Test Vectors', function(done) {
+                this.timeout(0);
 
-            for (var vector in vectors) {
-                var rtn = ctx.MPIN.CLIENT_1(sha, vectors[vector].DATE, hextobytes(vectors[vector].MPIN_ID_HEX), null, hextobytes(vectors[vector].X), vectors[vector].PIN2, hextobytes(vectors[vector].TOKEN), SEC, xID, xCID, hextobytes(vectors[vector].TIME_PERMIT));
-                expect(rtn).to.be.equal(0);
-                expect(ctx.MPIN.bytestostring(xID)).to.be.equal(vectors[vector].U);
-                expect(ctx.MPIN.bytestostring(xCID)).to.be.equal(vectors[vector].UT);
+                xID = [];
+                xCID = [];
+                SEC = [];
+                Y = [];
 
-                var rtn = ctx.MPIN.CLIENT_2(hextobytes(vectors[vector].X), hextobytes(vectors[vector].Y), SEC);
-                expect(rtn).to.be.equal(0);
-                expect(ctx.MPIN.bytestostring(SEC)).to.be.equal(vectors[vector].V);
-            }
-            done();
-        });
+                vectors.forEach(function(vector) {
+                    var rtn = MPIN.CLIENT_1(sha, vector.DATE, hextobytes(vector.MPIN_ID_HEX), null, hextobytes(vector.X), vector.PIN2, hextobytes(vector.TOKEN), SEC, xID, xCID, hextobytes(vector.TIME_PERMIT));
+                    expect(rtn).to.be.equal(0);
+                    expect(MPIN.bytestostring(xID)).to.be.equal(vector.U);
+                    expect(MPIN.bytestostring(xCID)).to.be.equal(vector.UT);
 
-        it('test MPin One Pass ' + pf_curves[i] + ' with Test Vectors', function(done) {
-            this.timeout(0);
-            // Load test vectors
-            var vectors = require('../testVectors/mpin/MPIN_ONE_PASS_' + pf_curves[j] + '.json');
+                    var rtn = MPIN.CLIENT_2(hextobytes(vector.X), hextobytes(vector.Y), SEC);
+                    expect(rtn).to.be.equal(0);
+                    expect(MPIN.bytestostring(SEC)).to.be.equal(vector.V);
+                });
 
-            var sha = ctx.MPIN.HASH_TYPE;
-            var xID = [];
-            var SEC = [];
-            var Y = [];
+                done();
+            });
 
-            for (var vector in vectors) {
-                var rtn = ctx.MPIN.CLIENT(sha, 0, hextobytes(vectors[vector].MPIN_ID_HEX), null, hextobytes(vectors[vector].X), vectors[vector].PIN2, hextobytes(vectors[vector].TOKEN), SEC, xID, null, null, vectors[vector].TimeValue, Y);
-                expect(rtn).to.be.equal(0);
-                expect(ctx.MPIN.bytestostring(xID)).to.be.equal(vectors[vector].U);
-                expect(ctx.MPIN.bytestostring(SEC)).to.be.equal(vectors[vector].SEC);
-            }
-            done();
-        });
+            it('test MPin One Pass ' + curve + ' with Test Vectors', function(done) {
+                this.timeout(0);
 
-      }
+                xID = [];
+                SEC = [];
+                Y = [];
 
+                vectors = require('../testVectors/mpin/MPIN_ONE_PASS_' + curve + '.json');
+
+                vectors.forEach(function(vector) {
+                    var rtn = MPIN.CLIENT(sha, 0, hextobytes(vector.MPIN_ID_HEX), null, hextobytes(vector.X), vector.PIN2, hextobytes(vector.TOKEN), SEC, xID, null, null, vector.TimeValue, Y);
+                    expect(rtn).to.be.equal(0);
+                    expect(MPIN.bytestostring(xID)).to.be.equal(vector.U);
+                    expect(MPIN.bytestostring(SEC)).to.be.equal(vector.SEC);
+                });
+
+                done();
+            });
+        }
     });
-}
+});
